@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     protected void onCreate(Bundle savedInstanceState) {
         DIR_NAME = getString(R.string.app_name);
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SettingsActivity.setTheme(prefs);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
