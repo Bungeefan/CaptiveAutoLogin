@@ -15,6 +15,8 @@ import android.content.res.ColorStateList;
 import android.net.CaptivePortal;
 import android.net.ConnectivityManager;
 import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -47,8 +49,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import tk.bungeefan.captiveautologin.ILoginFailed;
 import tk.bungeefan.captiveautologin.R;
@@ -107,7 +107,6 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
 //        EXTERNAL_DIR_SAVE = new File(Environment.getExternalStorageDirectory(), DIR_NAME);
 //        EXTERNAL_FILE_SAVE = new File(EXTERNAL_DIR_SAVE, FULL_FILE_NAME);
 
@@ -157,21 +156,21 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                     if (!ssid.equals(wifiData.getSSID())) {
                         DialogInterface.OnClickListener continueClick = (dialog, which) ->
                                 Util.loginWifi(this, wifiData, captivePortal, network, false);
+                        int title;
+                        String message;
                         if (!Util.isUnknownSSID(ssid)) {
-                            new AlertDialog.Builder(this)
-                                    .setTitle(getString(R.string.other_network_detected))
-                                    .setMessage(String.format(getString(R.string.another_network), ssid, wifiData.getSSID()))
-                                    .setPositiveButton(getString(R.string.login_although), continueClick)
-                                    .setNegativeButton(android.R.string.cancel, null)
-                                    .show();
+                            title = R.string.other_network_detected;
+                            message = String.format(getString(R.string.another_network), ssid, wifiData.getSSID());
                         } else {
-                            new AlertDialog.Builder(this)
-                                    .setTitle(getString(R.string.no_wifi_network_detected))
-                                    .setMessage(getString(R.string.not_connected_to_network))
-                                    .setNegativeButton(getString(R.string.login_although), continueClick)
-                                    .setPositiveButton(android.R.string.cancel, null)
-                                    .show();
+                            title = R.string.no_wifi_network_detected;
+                            message = getString(R.string.not_connected_to_network);
                         }
+                        new AlertDialog.Builder(this)
+                                .setTitle(getString(title))
+                                .setMessage(message)
+                                .setNegativeButton(getString(R.string.login_although), continueClick)
+                                .setPositiveButton(android.R.string.cancel, null)
+                                .show();
                     } else {
                         Util.loginWifi(this, wifiData, captivePortal, network, false);
                     }
@@ -190,12 +189,26 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         createNotificationChannel();
 
         checkUpdate(true);
-        new Timer().schedule(new TimerTask() {
+
+//        new Timer().schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                checkForWifi();
+//            }
+//        }, 1000);
+
+        NetworkRequest.Builder builder = new NetworkRequest.Builder();
+        builder.addCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL);
+        ConnectivityManager.NetworkCallback callback = new ConnectivityManager.NetworkCallback() {
+
             @Override
-            public void run() {
-                checkForWifi();
+            public void onAvailable(@NonNull Network network) {
+                Log.d(TAG, "Network available, checking for wifi...");
+                checkForWifi(true);
             }
-        }, 1000);
+
+        };
+        mConnectivityManager.registerNetworkCallback(builder.build(), callback);
     }
 
     @Override
