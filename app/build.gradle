@@ -6,8 +6,8 @@ android {
         applicationId "tk.bungeefan.captiveautologin"
         minSdkVersion 24
         targetSdkVersion 29
-        versionCode 7
-        versionName "1.4.1.1"
+        versionCode 8
+        versionName "1.4.1.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
