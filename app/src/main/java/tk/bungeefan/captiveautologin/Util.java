@@ -44,7 +44,6 @@ public class Util {
     public static void loginWifi(MainActivity ctx, WifiData wifiData, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
         if (!LoginTask.taskRunning) {
             new LoginTask(ctx, wifiData, captivePortal, network, unnecessaryOutputDisabled).execute();
-            Log.d(TAG, "LoginTask (" + wifiData.getSSID() + ") started!");
         } else {
             Log.d(TAG, "LoginTask already running!");
             if (!unnecessaryOutputDisabled) {
@@ -59,7 +58,7 @@ public class Util {
             inputStream = conn.getInputStream();
         } catch (FileNotFoundException e) {
             inputStream = conn.getErrorStream();
-            Log.i(TAG, "Using ErrorStream due to the exception");
+            Log.d(TAG, "Using ErrorStream due to the exception");
         }
         String response = "";
         if (inputStream != null) {

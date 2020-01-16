@@ -150,16 +150,17 @@ public class LoginTask extends AsyncTask<String, String, String> {
     protected void onPreExecute() {
         super.onPreExecute();
         taskRunning = true;
-        if (!unnecessaryOutputDisabled) {
-            mNotificationManager.notify(notificationId, new NotificationCompat.Builder(mContext.get(), MainActivity.CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_stat_name)
-                    .setContentTitle(String.format(mContext.get().getString(R.string.login_in_progress), wifiData.getSSID()))
-                    .setContentText(mContext.get().getString(R.string.login_try))
-                    .setProgress(100, 0, true)
-                    .setOngoing(true)
-                    .build()
-            );
+        Log.d(TAG, this.getClass().getSimpleName() + " (" + wifiData.getSSID() + ") started!");
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext.get(), MainActivity.CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .setContentTitle(String.format(mContext.get().getString(R.string.login_in_progress), wifiData.getSSID()))
+                .setContentText(mContext.get().getString(R.string.login_try))
+                .setProgress(100, 0, true)
+                .setOngoing(true);
+        if (unnecessaryOutputDisabled) {
+            builder.setPriority(NotificationCompat.PRIORITY_MIN);
         }
+        mNotificationManager.notify(notificationId, builder.build());
         bindNetwork(mConnectivityManager, network);
     }
 
@@ -203,7 +204,7 @@ public class LoginTask extends AsyncTask<String, String, String> {
             response = mContext.get().getString(R.string.failed_with_error) + ": " + e.getMessage();
             failed = true;
         }
-        if ((response == null || response.isEmpty()) && !unnecessaryOutputDisabled) {
+        if ((response == null || response.isEmpty())) {
             response = mContext.get().getString(R.string.failed_with_http_code) + ": \"" + responseCode + "\"";
             failed = true;
         }
@@ -221,31 +222,31 @@ public class LoginTask extends AsyncTask<String, String, String> {
         mContext.get().mListViewAdapter.sort((o1, o2) -> Long.compare(o2.getLastLogin(), o1.getLastLogin()));
 
         if (response != null && !response.isEmpty()) {
-            PendingIntent pendingIntent;
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext.get(), MainActivity.CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_stat_name)
+                    .setContentTitle("(" + wifiData.getSSID() + ") " + mContext.get().getString(!failed ? R.string.login_successful : R.string.login_failed))
+                    .setContentText(response)
+                    .setAutoCancel(true)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(response));
             if (failed) {
                 Intent resultIntent = new Intent(mContext.get(), MainActivity.class)
                         .putExtra(FAILED_EXTRA, failed)
                         .putExtra(WIFI_DATA_EXTRA, wifiData)
                         .putExtra(RESPONSE_EXTRA, response)
                         .putExtra(WebViewActivity.URL_EXTRA, lastUrl.toString());
-                pendingIntent = TaskStackBuilder.create(mContext.get()).addNextIntentWithParentStack(resultIntent).getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-            } else {
-                pendingIntent = PendingIntent.getActivity(mContext.get(), 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent pendingIntent = TaskStackBuilder.create(mContext.get()).addNextIntentWithParentStack(resultIntent).getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+                builder.setContentIntent(pendingIntent);
             }
-            mNotificationManager.notify(notificationId, new NotificationCompat.Builder(mContext.get(), MainActivity.CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_stat_name)
-                    .setContentTitle("(" + wifiData.getSSID() + ") " + mContext.get().getString(!failed ? R.string.login_successful : R.string.login_failed))
-                    .setContentText(response)
-                    .setContentIntent(pendingIntent)
-                    .setAutoCancel(true)
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(response))
-                    .build()
-            );
+            if (unnecessaryOutputDisabled) {
+                builder.setPriority(NotificationCompat.PRIORITY_MIN);
+            }
+            mNotificationManager.notify(notificationId, builder.build());
         }
         if (failed && !unnecessaryOutputDisabled) {
             mContext.get().loginFailed(captivePortal, wifiData, response, lastUrl.toString());
         }
         taskRunning = false;
+        Log.d(TAG, this.getClass().getSimpleName() + " (" + wifiData.getSSID() + ") finished!");
     }
 
     public LoginTask disableUnnecessaryOutput() {
