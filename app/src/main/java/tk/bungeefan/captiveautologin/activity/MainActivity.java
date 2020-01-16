@@ -211,7 +211,6 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         } else {
             if (!CheckUpdateTask.taskRunning) {
                 new CheckUpdateTask(this, unnecessaryOutputDisabled).execute();
-                Log.d(TAG, CheckUpdateTask.class.getSimpleName() + " started!");
             } else {
                 Log.d(TAG, CheckUpdateTask.class.getSimpleName() + " already running!");
             }

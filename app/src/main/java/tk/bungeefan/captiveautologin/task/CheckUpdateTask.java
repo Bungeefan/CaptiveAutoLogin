@@ -39,6 +39,7 @@ public class CheckUpdateTask extends AsyncTask<Void, Long, Long> {
     protected void onPreExecute() {
         super.onPreExecute();
         taskRunning = true;
+        Log.d(TAG, this.getClass().getSimpleName() + " started!");
     }
 
     @Override
@@ -59,6 +60,7 @@ public class CheckUpdateTask extends AsyncTask<Void, Long, Long> {
     protected void onPostExecute(Long newestVersion) {
         super.onPostExecute(newestVersion);
         taskRunning = false;
+        Log.d(TAG, this.getClass().getSimpleName() + " finished!");
         try {
             long currentVersion = PackageInfoCompat.getLongVersionCode(mContext.get().getPackageManager().getPackageInfo(mContext.get().getPackageName(), 0));
             if (newestVersion > currentVersion) {
