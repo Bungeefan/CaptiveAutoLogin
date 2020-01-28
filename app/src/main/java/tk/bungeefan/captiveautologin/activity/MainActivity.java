@@ -376,15 +376,17 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
     private void restore(Uri uri) {
         String name = DocumentFile.fromSingleUri(this, uri).getName();
-        SharedPreferences.Editor edit = prefs.edit();
-        for (WifiData wifiData : wifiDataList) {
-            edit.remove(wifiData.getDataKey());
-        }
-        edit.apply();
         try {
             List<WifiData> importedWifiDataList = Util.readData(this, TAG, uri);
             if (!importedWifiDataList.isEmpty()) {
+
+                SharedPreferences.Editor edit = prefs.edit();
+                for (WifiData wifiData : wifiDataList) {
+                    edit.remove(wifiData.getDataKey());
+                }
+                edit.apply();
                 mListViewAdapter.clear();
+
                 mListViewAdapter.addAll(importedWifiDataList);
                 Util.writeData(MainActivity.this, TAG, this.wifiDataList, null);
                 new AlertDialog.Builder(this)
