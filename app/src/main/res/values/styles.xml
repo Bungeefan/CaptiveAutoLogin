@@ -1,20 +1,16 @@
 <resources>
+
     <attr name="ic_add_circle" format="reference" />
     <attr name="ic_fab_add_circle" format="reference" />
     <attr name="fabColor" format="reference" />
 
-    <style name="AppTheme.Default" parent="Theme.AppCompat.DayNight">
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight">
         <!--<item name="colorPrimary">@color/colorPrimary</item>-->
         <!--<item name="colorPrimaryDark">@color/colorPrimaryDark</item>-->
         <!--<item name="colorAccent">@color/colorAccent</item>-->
-        <item name="fabColor">@color/fabDark</item>
-        <item name="ic_add_circle">@drawable/ic_add_circle_light_24dp</item>
-        <item name="ic_fab_add_circle">@drawable/ic_add_circle_dark_24dp</item>
+        <item name="fabColor">@color/fab</item>
+        <item name="ic_add_circle">@drawable/ic_add_circle_24dp</item>
+        <item name="ic_fab_add_circle">@drawable/ic_add_circle_24dp</item>
     </style>
 
-    <!--    <style name="AppTheme.Light" parent="Theme.AppCompat.Light">-->
-    <!--        <item name="fabColor">@color/fabLight</item>-->
-    <!--        <item name="ic_add_circle">@drawable/ic_add_circle_dark_24dp</item>-->
-    <!--        <item name="ic_fab_add_circle">@drawable/ic_add_circle_light_24dp</item>-->
-    <!--    </style>-->
 </resources>

@@ -3,8 +3,7 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
-    <color name="fabLight">#000</color>
-    <color name="fabDark">#FFF</color>
+    <color name="fab">#000</color>
     <color name="snackBarGreen">#0FFF03</color>
     <color name="snackBarOrange">#FFF400</color>
 </resources>

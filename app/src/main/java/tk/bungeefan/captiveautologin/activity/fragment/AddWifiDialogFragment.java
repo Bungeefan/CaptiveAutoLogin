@@ -3,6 +3,7 @@ package tk.bungeefan.captiveautologin.activity.fragment;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.view.View;
@@ -28,6 +29,7 @@ import tk.bungeefan.captiveautologin.data.WifiData;
 
 public class AddWifiDialogFragment extends DialogFragment {
 
+    private static final String TAG = AddWifiDialogFragment.class.getSimpleName();
     private ArrayAdapter<String> mWifiSpinnerAdapter;
     private WifiManager mWifiManager;
     private SharedPreferences prefs;
@@ -46,8 +48,9 @@ public class AddWifiDialogFragment extends DialogFragment {
         prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         mWifiManager = getActivity().getSystemService(WifiManager.class);
 
-        List<String> configuredNetworks = (!mWifiManager.getConfiguredNetworks().isEmpty() ?
-                mWifiManager.getConfiguredNetworks().stream()
+        List<WifiConfiguration> wifiConfigurations = mWifiManager.getConfiguredNetworks();
+        List<String> configuredNetworks = (wifiConfigurations != null && !wifiConfigurations.isEmpty() ?
+                wifiConfigurations.stream()
                         .map(wifiConfiguration -> Util.replaceSSID(wifiConfiguration.SSID)) :
                 mWifiManager.getScanResults().stream()
                         .map(scanResult -> Util.replaceSSID(scanResult.SSID))
@@ -139,6 +142,9 @@ public class AddWifiDialogFragment extends DialogFragment {
                     wifiData.setUsername(username);
                     wifiData.setPassword(prefs, password);
                     activity.mListViewAdapter.notifyDataSetChanged();
+
+                    MainActivity mainActivity = (MainActivity) getActivity();
+                    Util.writeData(getContext(), TAG, mainActivity.wifiDataList, null);
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .create();

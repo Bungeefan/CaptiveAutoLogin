@@ -1,19 +1,27 @@
 package tk.bungeefan.captiveautologin;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.CaptivePortal;
 import android.net.Network;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.preference.PreferenceManager;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
 import java.util.List;
 
 import tk.bungeefan.captiveautologin.activity.MainActivity;
@@ -73,5 +81,43 @@ public class Util {
         }
         Log.d(TAG, "Response of " + conn.getURL() + ": \"" + response + "\"");
         return response;
+    }
+
+    public static List<WifiData> readData(Context ctx, String TAG, Uri uri) throws IOException {
+        List<WifiData> wifiDataList = new ArrayList<>();
+        InputStream inputStream = uri == null ? ctx.openFileInput(MainActivity.FULL_FILE_NAME) : ctx.getContentResolver().openInputStream(uri);
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(inputStream))) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+            while (in.ready()) {
+                String[] split = in.readLine().split(";");
+                WifiData wifiData = new WifiData();
+                if (split.length >= 1) {
+                    wifiData.setWifiName(split[0]);
+                    if (split.length >= 2) {
+                        wifiData.setUsername(split[1]);
+                        if (split.length >= 3) {
+                            if (uri != null) {
+                                wifiData.setPassword(prefs, split[2]);
+                            }
+                            if (split.length >= 4) {
+                                wifiData.setLastLogin(Long.parseLong(split[3]));
+                            }
+                        }
+                    }
+                }
+                wifiDataList.add(wifiData);
+            }
+        }
+        return wifiDataList;
+    }
+
+    public static boolean writeData(Context ctx, String TAG, List<WifiData> wifiDataList, Uri uri) {
+        try (PrintWriter out = new PrintWriter(new OutputStreamWriter(uri == null ? ctx.openFileOutput(MainActivity.FULL_FILE_NAME, Context.MODE_PRIVATE) : ctx.getContentResolver().openOutputStream(uri)))) {
+            wifiDataList.forEach(wifiData -> out.println(wifiData.toCSVString(uri != null ? PreferenceManager.getDefaultSharedPreferences(ctx) : null)));
+            return true;
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, Log.getStackTraceString(e));
+        }
+        return false;
     }
 }

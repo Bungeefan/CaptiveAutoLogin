@@ -6,7 +6,6 @@ import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -40,13 +39,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 //    private File EXTERNAL_DIR_SAVE;
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String FILE_NAME = "wifi_data";
-    private static final String FULL_FILE_NAME = FILE_NAME + ".csv";
+    public static final String FULL_FILE_NAME = FILE_NAME + ".csv";
     private static final int RQ_READ_FILE = 876;
     private static final int RQ_SAVE_FILE = 678;
     private static final int RQ_ACCESS_FINE_LOCATION = 1234;
@@ -92,11 +85,6 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
     private CaptivePortal captivePortal;
     private Network network;
-
-    private static boolean existsData(Context ctx) {
-        File f = ctx.getFileStreamPath(FULL_FILE_NAME);
-        return f.exists();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +117,8 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         if (intent.getBooleanExtra(LoginTask.FAILED_EXTRA, false)) {
             loginFailed(intent.getParcelableExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL), (WifiData) intent.getSerializableExtra(LoginTask.WIFI_DATA_EXTRA), intent.getStringExtra(LoginTask.RESPONSE_EXTRA), intent.getStringExtra(WebViewActivity.URL_EXTRA));
         }
+
+
         FloatingActionButton fab = findViewById(R.id.fab);
 
         TypedValue typedValue = new TypedValue();
@@ -138,11 +128,13 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         }
         fab.setOnClickListener(v -> showInputDialog());
 
+
         swipeRefresh = findViewById(R.id.swipeRefresh);
         swipeRefresh.setOnRefreshListener(() -> {
             checkForWifi();
             swipeRefresh.setRefreshing(false);
         });
+
 
         listView = findViewById(R.id.networkListView);
         listView.setAdapter(mListViewAdapter = new WifiDataAdapter<>(this, R.layout.list_item, wifiDataList));
@@ -180,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         registerForContextMenu(listView);
 
         try {
-            wifiDataList.addAll(readData(this, TAG, null));
+            wifiDataList.addAll(Util.readData(this, TAG, null));
             mListViewAdapter.notifyDataSetChanged();
         } catch (IOException e) {
             Log.e(TAG, Log.getStackTraceString(e));
@@ -228,25 +220,6 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 Log.d(TAG, CheckUpdateTask.class.getSimpleName() + " already running!");
             }
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (wifiDataList.isEmpty()) {
-            try {
-                wifiDataList.addAll(readData(this, TAG, null));
-                mListViewAdapter.notifyDataSetChanged();
-            } catch (IOException e) {
-                Log.e(TAG, Log.getStackTraceString(e));
-            }
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        writeData(this, TAG, wifiDataList, null);
-        super.onPause();
     }
 
     private void createNotificationChannel() {
@@ -344,15 +317,6 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                     intent_create_doc.putExtra(Intent.EXTRA_TITLE, FILE_NAME);
 //                    intent_create_doc.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri);
                     startActivityForResult(intent_create_doc, RQ_SAVE_FILE);
-
-//                    new AlertDialog.Builder(this)
-//                            .setTitle(R.string.data_save_title)
-//                            .setMessage(String.format(getString(R.string.save_all_data), FULL_FILE_NAME))
-//                            .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
-//
-//                            })
-//                            .setNegativeButton(android.R.string.cancel, null)
-//                            .show();
                 }
                 break;
             case R.id.option_restore:
@@ -395,7 +359,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
     private void save(Uri uri) {
         String name = DocumentFile.fromSingleUri(this, uri).getName();
-        if (writeData(MainActivity.this, TAG, wifiDataList, uri)) {
+        if (Util.writeData(MainActivity.this, TAG, wifiDataList, uri)) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.success)
                     .setMessage(String.format(getString(R.string.data_save_success), name))
@@ -417,15 +381,24 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
             edit.remove(wifiData.getDataKey());
         }
         edit.apply();
-        mListViewAdapter.clear();
         try {
-            mListViewAdapter.addAll(readData(this, TAG, uri));
-            writeData(MainActivity.this, TAG, wifiDataList, null);
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.success)
-                    .setMessage(R.string.data_restoration_success)
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show();
+            List<WifiData> importedWifiDataList = Util.readData(this, TAG, uri);
+            if (!importedWifiDataList.isEmpty()) {
+                mListViewAdapter.clear();
+                mListViewAdapter.addAll(importedWifiDataList);
+                Util.writeData(MainActivity.this, TAG, this.wifiDataList, null);
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.success)
+                        .setMessage(R.string.data_restoration_success)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            } else {
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.failed)
+                        .setMessage(R.string.no_data_found)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            }
         } catch (IOException e) {
             Log.e(TAG, Log.getStackTraceString(e));
             new AlertDialog.Builder(this)
@@ -454,7 +427,10 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.warning)
                         .setMessage(String.format(getString(R.string.removing_wifi), wifiData.getSSID()))
-                        .setPositiveButton(android.R.string.yes, (dialog, which) -> mListViewAdapter.remove(wifiData))
+                        .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                            mListViewAdapter.remove(wifiData);
+                            Util.writeData(this, TAG, wifiDataList, null);
+                        })
                         .setNegativeButton(android.R.string.cancel, null)
                         .show();
                 break;
@@ -464,44 +440,6 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 break;
         }
         return super.onContextItemSelected(item);
-    }
-
-    public List<WifiData> readData(Context ctx, String TAG, Uri uri) throws IOException {
-        List<WifiData> wifiDataList = new ArrayList<>();
-        if (existsData(ctx)) {
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(uri == null ? ctx.openFileInput(FULL_FILE_NAME) : getContentResolver().openInputStream(uri)))) {
-                while (in.ready()) {
-                    String[] split = in.readLine().split(";");
-                    WifiData wifiData = new WifiData();
-                    if (split.length >= 1) {
-                        wifiData.setWifiName(split[0]);
-                        if (split.length >= 2) {
-                            wifiData.setUsername(split[1]);
-                            if (split.length >= 3) {
-                                if (uri != null) {
-                                    wifiData.setPassword(prefs, split[2]);
-                                }
-                                if (split.length >= 4) {
-                                    wifiData.setLastLogin(Long.parseLong(split[3]));
-                                }
-                            }
-                        }
-                    }
-                    wifiDataList.add(wifiData);
-                }
-            }
-        }
-        return wifiDataList;
-    }
-
-    public boolean writeData(Context ctx, String TAG, List<WifiData> wifiDataList, Uri uri) {
-        try (PrintWriter out = new PrintWriter(new OutputStreamWriter(uri == null ? ctx.openFileOutput(FULL_FILE_NAME, MODE_PRIVATE) : getContentResolver().openOutputStream(uri)))) {
-            wifiDataList.forEach(wifiData -> out.println(wifiData.toCSVString(uri != null ? PreferenceManager.getDefaultSharedPreferences(ctx) : null)));
-            return true;
-        } catch (FileNotFoundException e) {
-            Log.e(TAG, Log.getStackTraceString(e));
-        }
-        return false;
     }
 
     @Override

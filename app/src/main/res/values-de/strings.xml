@@ -53,17 +53,18 @@
     <string name="data_save_title">Speichern</string>
     <string name="override_all_data">Diese Aktion wird alle vorhandenen Daten überschreiben!</string>
     <string name="save">Speichern</string>
-    <!--    <string name="save_all_data">Diese Aktion wird alle ihre Daten unter \"%s\" speichern</string>-->
     <string name="success">Erfolgreich</string>
     <string name="warning">Warnung</string>
     <string name="failed">Fehlgeschlagen</string>
     <string name="removing_wifi">Bist du dir sicher, dass du das Wlan (%s) entfernen möchtest?</string>
     <string name="title_settings">Einstellungen</string>
-    <string name="title_theme">Theme Einstellungen</string>
+    <string name="title_theme">Theme</string>
     <string name="theme_light">Hell</string>
     <string name="theme_dark">Dunkel</string>
     <string name="theme_system_default">System Einstellung</string>
     <string name="theme_auto_battery">Akku Einstellung</string>
     <string name="last_login">Letzter Login</string>
     <string name="manual_input">Manuelle Eingabe</string>
+    <string name="title_notification">Benachrichtigungen</string>
+    <string name="no_data_found">Keine Daten gefunden!</string>
 </resources>
