@@ -11,8 +11,8 @@ import tk.bungeefan.captiveautologin.activity.fragment.SettingsFragment;
 
 public class SettingsActivity extends AppCompatActivity {
 
-    private SharedPreferences prefs;
     public static final String THEME_KEY = "pref_theme";
+    private SharedPreferences prefs;
 
     public static void setTheme(SharedPreferences prefs) {
         int defaultValue = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
@@ -29,10 +29,11 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
+        SettingsFragment settingsFragment = new SettingsFragment();
         super.onCreate(savedInstanceState);
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(android.R.id.content, new SettingsFragment())
+                .replace(android.R.id.content, settingsFragment)
                 .commit();
 
         prefs.registerOnSharedPreferenceChangeListener((prefs, key) -> {

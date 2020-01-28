@@ -9,5 +9,8 @@
             android:key="pref_theme"
             android:summary="Darkmode yeah!!"
             android:title="@string/title_theme" />
+        <Preference
+            android:key="notificationBtn"
+            android:title="@string/title_notification" />
     </PreferenceCategory>
 </PreferenceScreen>

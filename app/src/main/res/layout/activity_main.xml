@@ -27,5 +27,5 @@
         android:layout_gravity="end|bottom"
         android:layout_margin="16dp"
         android:src="?attr/ic_fab_add_circle"
-        app:rippleColor="@color/fabDark" />
+        app:rippleColor="@color/fab" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
