@@ -1,7 +1,6 @@
 package tk.bungeefan.captiveautologin.task;
 
 import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.CaptivePortal;
@@ -228,15 +227,18 @@ public class LoginTask extends AsyncTask<String, String, String> {
                     .setContentText(response)
                     .setAutoCancel(true)
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(response));
+            PendingIntent pendingIntent;
             if (failed) {
                 Intent resultIntent = new Intent(mContext.get(), MainActivity.class)
                         .putExtra(FAILED_EXTRA, failed)
                         .putExtra(WIFI_DATA_EXTRA, wifiData)
                         .putExtra(RESPONSE_EXTRA, response)
                         .putExtra(WebViewActivity.URL_EXTRA, lastUrl.toString());
-                PendingIntent pendingIntent = TaskStackBuilder.create(mContext.get()).addNextIntentWithParentStack(resultIntent).getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-                builder.setContentIntent(pendingIntent);
+                pendingIntent = PendingIntent.getActivity(mContext.get(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            } else {
+                pendingIntent = PendingIntent.getActivity(mContext.get(), 0, new Intent(), PendingIntent.FLAG_CANCEL_CURRENT);
             }
+            builder.setContentIntent(pendingIntent);
             if (unnecessaryOutputDisabled) {
                 builder.setPriority(NotificationCompat.PRIORITY_MIN);
             }
