@@ -57,7 +57,7 @@ import static android.net.ConnectivityManager.ACTION_CAPTIVE_PORTAL_SIGN_IN;
 
 
 public class MainActivity extends AppCompatActivity implements ILoginFailed {
-    public static final String UPDATE_URL = "http://bungeefan.ddns.net/captiveautologin/";
+    public static final String UPDATE_URL = "https://bungeefan.ddns.net/captiveautologin/";
     public static final String VERSION_URL = UPDATE_URL + "currentVersion.txt";
     public static final String FILENAME_URL = UPDATE_URL + "appName.txt";
     public static final String CHANNEL_ID = "default_login";
