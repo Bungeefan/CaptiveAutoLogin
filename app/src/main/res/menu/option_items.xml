@@ -11,11 +11,11 @@
         android:id="@+id/option_update"
         android:title="@string/update_check" />
     <item
-        android:id="@+id/option_save"
-        android:title="@string/save" />
+        android:id="@+id/option_import"
+        android:title="@string/import_action" />
     <item
-        android:id="@+id/option_restore"
-        android:title="@string/restore" />
+        android:id="@+id/option_export"
+        android:title="@string/export_action" />
     <item
         android:id="@+id/option_settings"
         android:title="@string/title_settings" />

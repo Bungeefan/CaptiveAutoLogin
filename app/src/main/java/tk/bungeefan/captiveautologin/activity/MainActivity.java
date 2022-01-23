@@ -1,11 +1,13 @@
 package tk.bungeefan.captiveautologin.activity;
 
+import static android.net.ConnectivityManager.ACTION_CAPTIVE_PORTAL_SIGN_IN;
+
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,7 +20,6 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
@@ -30,8 +31,9 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SearchView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.preference.PreferenceManager;
@@ -53,25 +55,21 @@ import tk.bungeefan.captiveautologin.data.WifiDataAdapter;
 import tk.bungeefan.captiveautologin.task.CheckUpdateTask;
 import tk.bungeefan.captiveautologin.task.LoginTask;
 
-import static android.net.ConnectivityManager.ACTION_CAPTIVE_PORTAL_SIGN_IN;
-
 
 public class MainActivity extends AppCompatActivity implements ILoginFailed {
+
     public static final String UPDATE_URL = "https://bungeefan.ddns.net/captiveautologin/";
     public static final String VERSION_URL = UPDATE_URL + "currentVersion.txt";
     public static final String FILENAME_URL = UPDATE_URL + "appName.txt";
+    public static final String DOWNLOAD_URL = UPDATE_URL + "download/";
     public static final String CHANNEL_ID = "default_login";
-    //    private File EXTERNAL_FILE_SAVE;
-//    private File EXTERNAL_DIR_SAVE;
+
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String FILE_NAME = "wifi_data";
     public static final String FULL_FILE_NAME = FILE_NAME + ".csv";
-    private static final int RQ_READ_FILE = 876;
-    private static final int RQ_SAVE_FILE = 678;
     private static final int RQ_ACCESS_FINE_LOCATION = 1234;
     private static final int RQ_ACCESS_FINE_LOCATION_DIALOG = 1235;
-    private static final int RQ_WRITE_EXTERNAL_STORAGE = 123;
-    private static String DIR_NAME;
+    private static final String MIME_TYPE_CSV = "text/csv";
     public List<WifiData> wifiDataList = new ArrayList<>();
     public WifiDataAdapter<WifiData> mListViewAdapter;
     private ListView listView;
@@ -85,22 +83,16 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
     private CaptivePortal captivePortal;
     private Network network;
+    private ActivityResultLauncher<String> exportLauncher;
+    private ActivityResultLauncher<String> importLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        DIR_NAME = getString(R.string.app_name);
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SettingsActivity.setTheme(prefs);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-//        EXTERNAL_DIR_SAVE = new File(Environment.getExternalStorageDirectory(), DIR_NAME);
-//        EXTERNAL_FILE_SAVE = new File(EXTERNAL_DIR_SAVE, FULL_FILE_NAME);
-
-//        if (!EXTERNAL_DIR_SAVE.mkdirs()) {
-//            Log.w(TAG, "Directory not created");
-//        }
 
         mWifiManager = getSystemService(WifiManager.class);
         mNotificationManager = getSystemService(NotificationManager.class);
@@ -120,7 +112,6 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
 
         FloatingActionButton fab = findViewById(R.id.fab);
-
         TypedValue typedValue = new TypedValue();
         if (getTheme().resolveAttribute(R.attr.fabColor, typedValue, true)) {
             fab.setBackgroundTintList(ColorStateList.valueOf(getColor(typedValue.resourceId)));
@@ -182,25 +173,25 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
         checkUpdate(true);
 
-//        new Timer().schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                checkForWifi();
-//            }
-//        }, 1000);
-
         NetworkRequest.Builder builder = new NetworkRequest.Builder();
         builder.addCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL);
         ConnectivityManager.NetworkCallback callback = new ConnectivityManager.NetworkCallback() {
-
             @Override
             public void onAvailable(@NonNull Network network) {
                 Log.d(TAG, "Network available, checking for wifi...");
                 checkForWifi(true);
             }
-
         };
         mConnectivityManager.registerNetworkCallback(builder.build(), callback);
+
+        exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument() {
+            @NonNull
+            @Override
+            public Intent createIntent(@NonNull Context context, @NonNull String input) {
+                return super.createIntent(context, input).setType(MIME_TYPE_CSV);
+            }
+        }, this::exportData);
+        importLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), this::importData);
     }
 
     @Override
@@ -211,25 +202,19 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     }
 
     private void checkUpdate(boolean unnecessaryOutputDisabled) {
-        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RQ_WRITE_EXTERNAL_STORAGE);
+        if (!CheckUpdateTask.taskRunning) {
+            new CheckUpdateTask(this, unnecessaryOutputDisabled).execute();
         } else {
-            if (!CheckUpdateTask.taskRunning) {
-                new CheckUpdateTask(this, unnecessaryOutputDisabled).execute();
-            } else {
-                Log.d(TAG, CheckUpdateTask.class.getSimpleName() + " already running!");
-            }
+            Log.d(TAG, CheckUpdateTask.class.getSimpleName() + " already running!");
         }
     }
 
     private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mNotificationManager.deleteNotificationChannel("default"); //TODO Remove next version
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, getString(R.string.login_notification_channel), NotificationManager.IMPORTANCE_HIGH);
-            channel.setDescription(getString(R.string.login_notification_channel_description));
-            channel.setShowBadge(true);
-            mNotificationManager.createNotificationChannel(channel);
-        }
+        mNotificationManager.deleteNotificationChannel("default"); //TODO Remove next version
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, getString(R.string.login_notification_channel), NotificationManager.IMPORTANCE_HIGH);
+        channel.setDescription(getString(R.string.login_notification_channel_description));
+        channel.setShowBadge(true);
+        mNotificationManager.createNotificationChannel(channel);
     }
 
     @Override
@@ -239,14 +224,12 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
             if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 new AlertDialog.Builder(this)
                         .setTitle(getString(R.string.permission_denied))
-                        .setMessage(getString(R.string.permission_denied_description))
+                        .setMessage(getString(R.string.permission_denied_description, String.join(", ", permissions)))
                         .setPositiveButton(getString(R.string.i_understand), null)
                         .show();
             } else {
                 if (requestCode == RQ_ACCESS_FINE_LOCATION) {
                     checkForWifi();
-                } else if (requestCode == RQ_WRITE_EXTERNAL_STORAGE) {
-                    checkUpdate(false);
                 } else if (requestCode == RQ_ACCESS_FINE_LOCATION_DIALOG) {
                     showInputDialog();
                 }
@@ -307,34 +290,11 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
             case R.id.option_update:
                 checkUpdate(false);
                 break;
-            case R.id.option_save:
-                if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RQ_WRITE_EXTERNAL_STORAGE);
-                } else {
-                    Intent intent_create_doc = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                    intent_create_doc.addCategory(Intent.CATEGORY_OPENABLE);
-                    intent_create_doc.setType("text/csv");
-                    intent_create_doc.putExtra(Intent.EXTRA_TITLE, FILE_NAME);
-//                    intent_create_doc.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri);
-                    startActivityForResult(intent_create_doc, RQ_SAVE_FILE);
-                }
+            case R.id.option_export:
+                exportLauncher.launch(FILE_NAME);
                 break;
-            case R.id.option_restore:
-                if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RQ_WRITE_EXTERNAL_STORAGE);
-                } else {
-                    new AlertDialog.Builder(this)
-                            .setTitle(R.string.warning)
-                            .setMessage(R.string.override_all_data)
-                            .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
-                                Intent intent_get_content = new Intent(Intent.ACTION_GET_CONTENT);
-                                intent_get_content.addCategory(Intent.CATEGORY_OPENABLE);
-                                intent_get_content.setType("text/*");
-                                startActivityForResult(intent_get_content, RQ_READ_FILE);
-                            })
-                            .setNegativeButton(android.R.string.cancel, null)
-                            .show();
-                }
+            case R.id.option_import:
+                importLauncher.launch("test/*");
                 break;
             case R.id.option_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
@@ -343,60 +303,46 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RQ_SAVE_FILE) {
-            if (resultCode == Activity.RESULT_OK) {
-                save(data.getData());
-            }
-        } else if (requestCode == RQ_READ_FILE) {
-            if (resultCode == Activity.RESULT_OK) {
-                restore(data.getData());
-            }
-        }
-    }
+    private void exportData(Uri uri) {
+        if (uri == null) return;
 
-    private void save(Uri uri) {
         String name = DocumentFile.fromSingleUri(this, uri).getName();
-        if (Util.writeData(MainActivity.this, TAG, wifiDataList, uri)) {
+        Log.d(TAG, "Selected export uri: " + uri);
+        try {
+            Util.writeData(MainActivity.this, wifiDataList, uri);
             new AlertDialog.Builder(this)
                     .setTitle(R.string.success)
-                    .setMessage(String.format(getString(R.string.data_save_success), name))
+                    .setMessage(String.format(getString(R.string.data_export_success), name))
                     .setPositiveButton(android.R.string.ok, null)
                     .show();
-        } else {
+        } catch (IOException e) {
+            Log.e(TAG, Log.getStackTraceString(e));
             new AlertDialog.Builder(this)
-                    .setTitle(R.string.failed)
-                    .setMessage(String.format(getString(R.string.data_save_failed), name))
+                    .setTitle(R.string.error_title)
+                    .setMessage(String.format(getString(R.string.data_export_failed), name))
                     .setPositiveButton(android.R.string.ok, null)
                     .show();
         }
     }
 
-    private void restore(Uri uri) {
+    private void importData(Uri uri) {
+        if (uri == null) return;
+
         String name = DocumentFile.fromSingleUri(this, uri).getName();
         try {
             List<WifiData> importedWifiDataList = Util.readData(this, TAG, uri);
             if (!importedWifiDataList.isEmpty()) {
 
-                SharedPreferences.Editor edit = prefs.edit();
-                for (WifiData wifiData : wifiDataList) {
-                    edit.remove(wifiData.getDataKey());
-                }
-                edit.apply();
-                mListViewAdapter.clear();
-
                 mListViewAdapter.addAll(importedWifiDataList);
-                Util.writeData(MainActivity.this, TAG, this.wifiDataList, null);
+                Util.writeData(MainActivity.this, this.wifiDataList, null);
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.success)
-                        .setMessage(R.string.data_restoration_success)
+                        .setMessage(R.string.data_import_success)
                         .setPositiveButton(android.R.string.ok, null)
                         .show();
             } else {
                 new AlertDialog.Builder(this)
-                        .setTitle(R.string.failed)
+                        .setTitle(R.string.error_title)
                         .setMessage(R.string.no_data_found)
                         .setPositiveButton(android.R.string.ok, null)
                         .show();
@@ -404,8 +350,8 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         } catch (IOException e) {
             Log.e(TAG, Log.getStackTraceString(e));
             new AlertDialog.Builder(this)
-                    .setTitle(R.string.failed)
-                    .setMessage(String.format(getString(R.string.data_restoration_failed), name))
+                    .setTitle(R.string.error_title)
+                    .setMessage(String.format(getString(R.string.data_import_failed), name))
                     .setPositiveButton(android.R.string.ok, null)
                     .show();
         }
@@ -431,7 +377,15 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                         .setMessage(String.format(getString(R.string.removing_wifi), wifiData.getSSID()))
                         .setPositiveButton(android.R.string.yes, (dialog, which) -> {
                             mListViewAdapter.remove(wifiData);
-                            Util.writeData(this, TAG, wifiDataList, null);
+                            try {
+                                Util.writeData(this, wifiDataList, null);
+                            } catch (IOException e) {
+                                Log.e(TAG, Log.getStackTraceString(e));
+                                new AlertDialog.Builder(this)
+                                        .setTitle(R.string.error_title)
+                                        .setPositiveButton(android.R.string.ok, null)
+                                        .show();
+                            }
                         })
                         .setNegativeButton(android.R.string.cancel, null)
                         .show();

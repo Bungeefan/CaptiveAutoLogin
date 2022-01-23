@@ -18,6 +18,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
@@ -111,13 +112,10 @@ public class Util {
         return wifiDataList;
     }
 
-    public static boolean writeData(Context ctx, String TAG, List<WifiData> wifiDataList, Uri uri) {
-        try (PrintWriter out = new PrintWriter(new OutputStreamWriter(uri == null ? ctx.openFileOutput(MainActivity.FULL_FILE_NAME, Context.MODE_PRIVATE) : ctx.getContentResolver().openOutputStream(uri)))) {
+    public static void writeData(Context ctx, List<WifiData> wifiDataList, Uri uri) throws FileNotFoundException {
+        OutputStream outputStream = uri == null ? ctx.openFileOutput(MainActivity.FULL_FILE_NAME, Context.MODE_PRIVATE) : ctx.getContentResolver().openOutputStream(uri);
+        try (PrintWriter out = new PrintWriter(new OutputStreamWriter(outputStream))) {
             wifiDataList.forEach(wifiData -> out.println(wifiData.toCSVString(uri != null ? PreferenceManager.getDefaultSharedPreferences(ctx) : null)));
-            return true;
-        } catch (FileNotFoundException e) {
-            Log.e(TAG, Log.getStackTraceString(e));
         }
-        return false;
     }
 }

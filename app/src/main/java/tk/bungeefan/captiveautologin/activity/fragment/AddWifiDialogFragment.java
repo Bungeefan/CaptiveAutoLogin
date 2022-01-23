@@ -1,11 +1,14 @@
 package tk.bungeefan.captiveautologin.activity.fragment;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -14,11 +17,13 @@ import android.widget.Switch;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,7 +51,16 @@ public class AddWifiDialogFragment extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        mWifiSpinnerAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_dropdown_item);
         mWifiManager = getActivity().getSystemService(WifiManager.class);
+
+        loadNetworks();
+    }
+
+    private void loadNetworks() {
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
 
         List<WifiConfiguration> wifiConfigurations = mWifiManager.getConfiguredNetworks();
         List<String> configuredNetworks = (wifiConfigurations != null && !wifiConfigurations.isEmpty() ?
@@ -58,7 +72,7 @@ public class AddWifiDialogFragment extends DialogFragment {
                         .distinct())
                 .sorted()
                 .collect(Collectors.toList());
-        mWifiSpinnerAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_dropdown_item, configuredNetworks);
+        mWifiSpinnerAdapter.addAll(configuredNetworks);
     }
 
     @NonNull
@@ -144,7 +158,15 @@ public class AddWifiDialogFragment extends DialogFragment {
                     activity.mListViewAdapter.notifyDataSetChanged();
 
                     MainActivity mainActivity = (MainActivity) getActivity();
-                    Util.writeData(getContext(), TAG, mainActivity.wifiDataList, null);
+                    try {
+                        Util.writeData(getContext(), mainActivity.wifiDataList, null);
+                    } catch (IOException e) {
+                        Log.e(TAG, Log.getStackTraceString(e));
+                        new AlertDialog.Builder(mainActivity)
+                                .setTitle(R.string.error_title)
+                                .setPositiveButton(android.R.string.ok, null)
+                                .show();
+                    }
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .create();

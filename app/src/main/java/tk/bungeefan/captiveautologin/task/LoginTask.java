@@ -62,15 +62,15 @@ public class LoginTask extends AsyncTask<String, String, String> {
     private final CaptivePortal captivePortal;
     private final Network network;
     private final WifiData wifiData;
-    private NotificationManagerCompat mNotificationManager;
-    private ConnectivityManager mConnectivityManager;
-    private SharedPreferences prefs;
-    private WeakReference<MainActivity> mContext;
+    private final NotificationManagerCompat mNotificationManager;
+    private final ConnectivityManager mConnectivityManager;
+    private final SharedPreferences prefs;
+    private final WeakReference<MainActivity> mContext;
     private URL lastUrl;
     private String requestMethod = "POST";
     private boolean failed = false;
     private boolean unnecessaryOutputDisabled;
-    private int notificationId = 0;
+    private final int notificationId = 0;
 
     public LoginTask(MainActivity context, WifiData wifiData, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
         if (taskRunning) {
@@ -152,7 +152,7 @@ public class LoginTask extends AsyncTask<String, String, String> {
         Log.d(TAG, this.getClass().getSimpleName() + " (" + wifiData.getSSID() + ") started!");
         NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext.get(), MainActivity.CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_name)
-                .setContentTitle(String.format(mContext.get().getString(R.string.login_in_progress), wifiData.getSSID()))
+                .setContentTitle(mContext.get().getString(R.string.login_in_progress, wifiData.getSSID()))
                 .setContentText(mContext.get().getString(R.string.login_try))
                 .setProgress(100, 0, true)
                 .setOngoing(true);
@@ -200,11 +200,11 @@ public class LoginTask extends AsyncTask<String, String, String> {
             conn.disconnect();
         } catch (Exception e) {
             Log.e(TAG, Log.getStackTraceString(e));
-            response = mContext.get().getString(R.string.failed_with_error) + ": " + e.getMessage();
+            response = mContext.get().getString(R.string.failed_with_error, e.getMessage());
             failed = true;
         }
         if ((response == null || response.isEmpty())) {
-            response = mContext.get().getString(R.string.failed_with_http_code) + ": \"" + responseCode + "\"";
+            response = mContext.get().getString(R.string.failed_with_http_code, responseCode);
             failed = true;
         }
         Log.d(TAG, "HTTP Response Code: " + responseCode);

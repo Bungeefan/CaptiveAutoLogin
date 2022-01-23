@@ -53,9 +53,9 @@ public class WifiDetailsFragment extends DialogFragment {
                 .setTitle(getString(R.string.details))
                 .setMessage(
                         "SSID: " + ssid + "\n"
-                                + getString(R.string.username) + ": " + (!wifiUsername.isEmpty() ? wifiUsername : getString(R.string.no_saved_username)) + "\n"
+                                + getString(R.string.username) + ": " + (!wifiUsername.isEmpty() ? wifiUsername : "-") + "\n"
                                 + (!wifiPassword.isEmpty() ? getString(R.string.password_saved) : getString(R.string.no_saved_password)) + "\n"
-                                + getString(R.string.last_login) + ": " + (lastLogin != 0 ? DateFormat.getDateTimeInstance().format(new Date(lastLogin)) : getString(R.string.no_saved_last_login))
+                                + getString(R.string.last_login) + ": " + (lastLogin != 0 ? DateFormat.getDateTimeInstance().format(new Date(lastLogin)) : "-")
                 )
                 .create();
     }
