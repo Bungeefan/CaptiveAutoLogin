@@ -21,6 +21,7 @@ import android.net.NetworkRequest;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.ContextMenu;
@@ -222,11 +223,20 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (grantResults.length > 0) {
             if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                new AlertDialog.Builder(this)
+                AlertDialog.Builder builder = new AlertDialog.Builder(this)
                         .setTitle(getString(R.string.permission_denied))
-                        .setMessage(getString(R.string.permission_denied_description, String.join(", ", permissions)))
-                        .setPositiveButton(getString(R.string.i_understand), null)
-                        .show();
+                        .setMessage(getString(R.string.permission_denied_description))
+                        .setPositiveButton(getString(R.string.i_understand), null);
+
+                Intent settingsIntent = new Intent()
+                        .setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                        .setData(Uri.parse("package:" + getPackageName()))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                if (settingsIntent.resolveActivity(getPackageManager()) != null) {
+                    builder.setNeutralButton(getString(R.string.open_permission_settings), (dialog, which) -> startActivity(settingsIntent));
+                }
+
+                builder.show();
             } else {
                 if (requestCode == RQ_ACCESS_FINE_LOCATION) {
                     checkForWifi();

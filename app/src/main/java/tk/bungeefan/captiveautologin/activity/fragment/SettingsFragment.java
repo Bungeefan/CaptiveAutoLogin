@@ -1,7 +1,6 @@
 package tk.bungeefan.captiveautologin.activity.fragment;
 
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 
@@ -18,15 +17,10 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         Preference button = findPreference("notificationBtn");
         button.setOnPreferenceClickListener(preference -> {
-            Intent intent = new Intent();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                intent.setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
-                intent.putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName());
-            } else {
-                intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
-                intent.putExtra("app_package", getContext().getPackageName());
-                intent.putExtra("app_uid", getContext().getApplicationInfo().uid);
-            }
+            Intent intent = new Intent()
+                    .setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName())
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
             return true;
         });

@@ -19,7 +19,7 @@
     <string name="permission_denied">Permission denied!</string>
     <string name="login_notification_channel">Login</string>
     <string name="login_notification_channel_description">Notifies you about the login process</string>
-    <string name="permission_denied_description">Permission %s was not granted so the app can not fully work!</string>
+    <string name="permission_denied_description">Permission was not granted so the app can not fully work!</string>
     <string name="i_understand">I understand</string>
     <string name="try_manual_login">Try to log in manually instead!</string>
     <string name="error">Error</string>
@@ -64,4 +64,5 @@
     <string name="manual_input">Manual Input</string>
     <string name="title_notification">Notifications</string>
     <string name="no_data_found">No data found!</string>
+    <string name="open_permission_settings">Open Settings</string>
 </resources>

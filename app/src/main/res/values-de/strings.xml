@@ -41,7 +41,7 @@
     <string name="not_connected_to_network">Du bist zurzeit mit keinem Wifi Netzwerk verbunden!</string>
     <string name="other_network_detected">Anderes Netzwerk erkannt!</string>
     <string name="try_manual_login">Versuche stattdessen manuell einzuloggen!</string>
-    <string name="permission_denied_description">Berechtigung %s wurde nicht erteilt deshalb kann die App nicht vollständig funktionieren!</string>
+    <string name="permission_denied_description">Berechtigung wurde nicht erteilt deshalb kann die App nicht vollständig funktionieren!</string>
     <string name="downloading_update">Update wird heruntergeladen…</string>
     <string name="update_check">Auf neue Version überprüfen</string>
     <string name="data_import_failed">Daten von \"%s\" konnten nicht importiert werden</string>
@@ -65,4 +65,5 @@
     <string name="manual_input">Manuelle Eingabe</string>
     <string name="title_notification">Benachrichtigungen</string>
     <string name="no_data_found">Keine Daten gefunden!</string>
+    <string name="open_permission_settings">Öffne Einstellungen</string>
 </resources>
