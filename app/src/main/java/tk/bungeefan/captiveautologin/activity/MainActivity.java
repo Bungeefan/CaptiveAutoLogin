@@ -304,7 +304,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 exportLauncher.launch(FILE_NAME);
                 break;
             case R.id.option_import:
-                importLauncher.launch("test/*");
+                importLauncher.launch("text/*");
                 break;
             case R.id.option_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
