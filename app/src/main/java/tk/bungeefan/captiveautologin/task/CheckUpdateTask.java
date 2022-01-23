@@ -1,7 +1,6 @@
 package tk.bungeefan.captiveautologin.task;
 
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -24,8 +23,8 @@ public class CheckUpdateTask extends AsyncTask<Void, Long, Long> {
 
     private static final String TAG = CheckUpdateTask.class.getSimpleName();
     public static boolean taskRunning = false;
-    private WeakReference<MainActivity> mContext;
-    private boolean unnecessaryOutputDisabled;
+    private final WeakReference<MainActivity> mContext;
+    private final boolean unnecessaryOutputDisabled;
 
     public CheckUpdateTask(MainActivity context, boolean unnecessaryOutputDisabled) {
         if (taskRunning) {
@@ -39,7 +38,7 @@ public class CheckUpdateTask extends AsyncTask<Void, Long, Long> {
     protected void onPreExecute() {
         super.onPreExecute();
         taskRunning = true;
-        Log.d(TAG, this.getClass().getSimpleName() + " started!");
+        Log.d(TAG, this.getClass().getSimpleName() + " started");
     }
 
     @Override
@@ -49,9 +48,8 @@ public class CheckUpdateTask extends AsyncTask<Void, Long, Long> {
             HttpURLConnection conn = (HttpURLConnection) new URL(MainActivity.VERSION_URL).openConnection();
             String response = Util.readResponse(TAG, conn);
             newestVersion = Long.parseLong(response);
-        } catch (NumberFormatException ignored) {
-        } catch (IOException e) {
-            Log.e(TAG, Log.getStackTraceString(e));
+        } catch (NumberFormatException | IOException e) {
+            Log.e(TAG, "Update Check failed", e);
         }
         return newestVersion;
     }
@@ -60,34 +58,35 @@ public class CheckUpdateTask extends AsyncTask<Void, Long, Long> {
     protected void onPostExecute(Long newestVersion) {
         super.onPostExecute(newestVersion);
         taskRunning = false;
-        Log.d(TAG, this.getClass().getSimpleName() + " finished!");
+        Log.d(TAG, this.getClass().getSimpleName() + " finished");
         try {
             long currentVersion = PackageInfoCompat.getLongVersionCode(mContext.get().getPackageManager().getPackageInfo(mContext.get().getPackageName(), 0));
+
             if (newestVersion > currentVersion) {
-                Snackbar snackbar = Snackbar.make(mContext.get().findViewById(R.id.content), String.format(mContext.get().getString(R.string.new_version_available), newestVersion), Snackbar.LENGTH_INDEFINITE);
+                Snackbar snackbar = Snackbar.make(mContext.get().findViewById(R.id.content),
+                        mContext.get().getString(R.string.new_version_available, newestVersion),
+                        10000);
                 TextView snackBarTextView = snackbar.getView().findViewById(R.id.snackbar_text);
                 TextView snackBarActionTextView = snackbar.getView().findViewById(R.id.snackbar_action);
-                snackBarActionTextView.setTextSize(19);
+                snackBarActionTextView.setTextSize(18);
                 snackBarActionTextView.setTypeface(snackBarActionTextView.getTypeface(), Typeface.BOLD);
                 snackBarTextView.setTypeface(snackBarTextView.getTypeface(), Typeface.BOLD);
-                snackBarTextView.setTextColor(Color.YELLOW);
-                snackbar.setAction(R.string.install, v -> new InstallUpdateTask(mContext.get()).execute()).show();
+                snackbar.setAction(R.string.new_version_action, v -> new UpdateAPKTask(mContext.get()).execute()).show();
+            } else if (newestVersion == -1) {
+                Snackbar snackbar = Snackbar.make(mContext.get().findViewById(R.id.content),
+                        mContext.get().getString(R.string.update_check_failed),
+                        Snackbar.LENGTH_SHORT);
+                TextView snackBarTextView = snackbar.getView().findViewById(R.id.snackbar_text);
+                snackBarTextView.setTypeface(snackBarTextView.getTypeface(), Typeface.BOLD);
+                snackBarTextView.setTextColor(mContext.get().getColor(R.color.colorAccent));
+                snackbar.show();
             } else {
-                if (newestVersion == -1) {
-                    String output = mContext.get().getString(R.string.update_check_failed);
-                    Log.i(TAG, output);
-                    Snackbar snackbar = Snackbar.make(mContext.get().findViewById(R.id.content), output, Snackbar.LENGTH_SHORT);
+                if (!unnecessaryOutputDisabled) {
+                    Snackbar snackbar = Snackbar.make(mContext.get().findViewById(R.id.content),
+                            mContext.get().getString(R.string.version_up_to_date),
+                            Snackbar.LENGTH_SHORT);
                     TextView snackBarTextView = snackbar.getView().findViewById(R.id.snackbar_text);
                     snackBarTextView.setTypeface(snackBarTextView.getTypeface(), Typeface.BOLD);
-                    snackBarTextView.setTextColor(mContext.get().getColor(R.color.colorAccent));
-                    snackbar.show();
-                } else if (!unnecessaryOutputDisabled) {
-                    String output = mContext.get().getString(R.string.version_up_to_date);
-                    Log.i(TAG, output);
-                    Snackbar snackbar = Snackbar.make(mContext.get().findViewById(R.id.content), output, Snackbar.LENGTH_SHORT);
-                    TextView snackBarTextView = snackbar.getView().findViewById(R.id.snackbar_text);
-                    snackBarTextView.setTypeface(snackBarTextView.getTypeface(), Typeface.BOLD);
-                    snackBarTextView.setTextColor(mContext.get().getColor(R.color.snackBarGreen));
                     snackbar.show();
                 }
             }
