@@ -1,64 +1,59 @@
 package tk.bungeefan.captiveautologin.activity.fragment;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.Switch;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.DialogFragment;
-import androidx.preference.PreferenceManager;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputLayout;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import tk.bungeefan.captiveautologin.R;
 import tk.bungeefan.captiveautologin.Util;
-import tk.bungeefan.captiveautologin.activity.MainActivity;
-import tk.bungeefan.captiveautologin.data.WifiData;
+import tk.bungeefan.captiveautologin.data.entity.Login;
 
 public class AddWifiDialogFragment extends DialogFragment {
 
     private static final String TAG = AddWifiDialogFragment.class.getSimpleName();
+    public static final String REQUEST_KEY = "loginBundle";
+    public static final String BUNDLE_KEY = "loginData";
     private ArrayAdapter<String> mWifiSpinnerAdapter;
     private WifiManager mWifiManager;
-    private SharedPreferences prefs;
 
-    public static AddWifiDialogFragment newInstance(WifiData wifiData) {
-        AddWifiDialogFragment frag = new AddWifiDialogFragment();
+    public static AddWifiDialogFragment newInstance(@Nullable Login login) {
+        AddWifiDialogFragment dialogFragment = new AddWifiDialogFragment();
         Bundle args = new Bundle();
-        args.putSerializable(WifiDetailsFragment.WIFI_DATA_KEY, wifiData);
-        frag.setArguments(args);
-        return frag;
+        args.putSerializable(WifiDetailsFragment.DATA_KEY, login);
+        dialogFragment.setArguments(args);
+        return dialogFragment;
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        mWifiSpinnerAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_dropdown_item);
-        mWifiManager = getActivity().getSystemService(WifiManager.class);
+        mWifiSpinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item);
+        mWifiManager = requireContext().getSystemService(WifiManager.class);
 
         loadNetworks();
     }
 
     private void loadNetworks() {
-        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
 
@@ -88,7 +83,7 @@ public class AddWifiDialogFragment extends DialogFragment {
 
         wifiSpinner.setAdapter(mWifiSpinnerAdapter);
 
-        Switch manualInputSwitch = view.findViewById(R.id.manualInputSwitch);
+        SwitchCompat manualInputSwitch = view.findViewById(R.id.manualInputSwitch);
         manualInputSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             wifiSpinner.setVisibility(isChecked ? View.GONE : View.VISIBLE);
             input_layout_ssid.setVisibility(isChecked ? View.VISIBLE : View.GONE);
@@ -99,12 +94,12 @@ public class AddWifiDialogFragment extends DialogFragment {
             manualInputSwitch.setEnabled(false);
         }
 
-        WifiData oldWifiData = getArguments() != null ? (WifiData) getArguments().getSerializable(WifiDetailsFragment.WIFI_DATA_KEY) : null;
-        if (oldWifiData != null) {
-            usernameField.setText(oldWifiData.getUsername());
-            passwordField.setText(oldWifiData.getPassword(prefs));
+        Login login = getArguments() != null ? (Login) getArguments().getSerializable(WifiDetailsFragment.DATA_KEY) : null;
+        if (login != null) {
+            usernameField.setText(login.getUsername());
+            passwordField.setText(login.getPassword());
 
-            int position = mWifiSpinnerAdapter.getPosition(oldWifiData.getSSID());
+            int position = mWifiSpinnerAdapter.getPosition(login.getSSID());
             if (position == -1) {
                 manualInputSwitch.setChecked(true);
             }
@@ -112,7 +107,7 @@ public class AddWifiDialogFragment extends DialogFragment {
             if (!manualInputSwitch.isChecked()) {
                 wifiSpinner.setSelection(position);
             } else {
-                ssidField.setText(oldWifiData.getSSID());
+                ssidField.setText(login.getSSID());
             }
         } else if (!Util.isUnknownSSID(mWifiManager.getConnectionInfo().getSSID())) {
             String ssid = Util.replaceSSID(mWifiManager.getConnectionInfo().getSSID());
@@ -128,45 +123,23 @@ public class AddWifiDialogFragment extends DialogFragment {
                 ssidField.setText(ssid);
             }
         }
-        MainActivity activity = (MainActivity) getActivity();
-        return new AlertDialog.Builder(getActivity())
-                .setTitle(oldWifiData == null ? getString(R.string.add_wifi_login) : getString(R.string.edit_wifi_login))
+
+        return new MaterialAlertDialogBuilder(getActivity())
+                .setTitle(login == null ? getString(R.string.add_login_title) : getString(R.string.edit_login_title))
                 .setView(view)
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                     String username = ((EditText) view.findViewById(R.id.usernameField)).getText().toString().trim();
                     String password = ((EditText) view.findViewById(R.id.passwordField)).getText().toString().trim();
                     String wifiName = manualInputSwitch.isChecked() ? ((EditText) view.findViewById(R.id.ssidField)).getText().toString().trim() : (String) ((Spinner) view.findViewById(R.id.wifiSpinner)).getSelectedItem();
-                    WifiData wifiData;
-                    if (oldWifiData == null) {
-                        if (activity.wifiDataList.stream().noneMatch(wifiData1 -> wifiData1.getSSID().equals(wifiName))) {
-                            wifiData = new WifiData();
-                            activity.mListViewAdapter.add(wifiData);
-                        } else {
-                            new AlertDialog.Builder(getActivity())
-                                    .setTitle(getString(R.string.error))
-                                    .setMessage(String.format(getString(R.string.entry_already_exists), wifiName))
-                                    .setPositiveButton(android.R.string.ok, null)
-                                    .show();
-                            return;
-                        }
-                    } else {
-                        wifiData = oldWifiData;
-                    }
-                    wifiData.setWifiName(wifiName);
-                    wifiData.setUsername(username);
-                    wifiData.setPassword(prefs, password);
-                    activity.mListViewAdapter.notifyDataSetChanged();
 
-                    MainActivity mainActivity = (MainActivity) getActivity();
-                    try {
-                        Util.writeData(getContext(), mainActivity.wifiDataList, null);
-                    } catch (IOException e) {
-                        Log.e(TAG, Log.getStackTraceString(e));
-                        new AlertDialog.Builder(mainActivity)
-                                .setTitle(R.string.error_title)
-                                .setPositiveButton(android.R.string.ok, null)
-                                .show();
-                    }
+                    Login newLogin = login != null ? login : new Login();
+                    newLogin.setSSID(wifiName);
+                    newLogin.setUsername(username);
+                    newLogin.setPassword(password);
+
+                    Bundle result = new Bundle();
+                    result.putSerializable(BUNDLE_KEY, newLogin);
+                    getParentFragmentManager().setFragmentResult(REQUEST_KEY, result);
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .create();

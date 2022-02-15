@@ -2,8 +2,8 @@ package tk.bungeefan.captiveautologin;
 
 import android.net.CaptivePortal;
 
-import tk.bungeefan.captiveautologin.data.WifiData;
+import tk.bungeefan.captiveautologin.data.entity.Login;
 
 public interface ILoginFailed {
-    void loginFailed(CaptivePortal captivePortal, WifiData wifiData, String response, String url);
+    void loginFailed(CaptivePortal captivePortal, Login loginData, String response, String url);
 }
