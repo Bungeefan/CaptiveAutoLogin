@@ -2,7 +2,6 @@ package tk.bungeefan.captiveautologin;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.CaptivePortal;
 import android.net.Network;
@@ -10,8 +9,6 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 import android.widget.Toast;
-
-import androidx.preference.PreferenceManager;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -26,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tk.bungeefan.captiveautologin.activity.MainActivity;
-import tk.bungeefan.captiveautologin.data.WifiData;
+import tk.bungeefan.captiveautologin.data.entity.Login;
 import tk.bungeefan.captiveautologin.task.LoginTask;
 
 public class Util {
@@ -36,12 +33,12 @@ public class Util {
         return ssid.replace("\"", "");
     }
 
-    public static void checkForWifi(MainActivity ctx, List<WifiData> list, WifiManager wifiManager, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
+    public static void checkForWifi(MainActivity ctx, List<Login> list, WifiManager wifiManager, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
         if (ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             String ssid = replaceSSID(wifiManager.getConnectionInfo().getSSID());
             if (!isUnknownSSID(ssid)) {
-                list.stream().filter(wifiData -> wifiData.getSSID().equals(ssid))
-                        .forEach(wifiData -> loginWifi(ctx, wifiData, captivePortal, network, unnecessaryOutputDisabled));
+                list.stream().filter(login -> login.getSSID().equals(ssid))
+                        .forEach(login -> loginWifi(ctx, login, captivePortal, network, unnecessaryOutputDisabled));
             }
         }
     }
@@ -50,9 +47,9 @@ public class Util {
         return ssid.equals("<unknown ssid>");
     }
 
-    public static void loginWifi(MainActivity ctx, WifiData wifiData, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
+    public static void loginWifi(MainActivity ctx, Login login, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
         if (!LoginTask.taskRunning) {
-            new LoginTask(ctx, wifiData, captivePortal, network, unnecessaryOutputDisabled).execute();
+            new LoginTask(ctx, login, captivePortal, network, unnecessaryOutputDisabled).execute();
         } else {
             Log.d(TAG, "LoginTask already running!");
             if (!unnecessaryOutputDisabled) {
@@ -84,38 +81,37 @@ public class Util {
         return response;
     }
 
-    public static List<WifiData> readData(Context ctx, String TAG, Uri uri) throws IOException {
-        List<WifiData> wifiDataList = new ArrayList<>();
+    public static List<Login> readData(Context ctx, String TAG, Uri uri) throws IOException {
+        List<Login> dataList = new ArrayList<>();
         InputStream inputStream = uri == null ? ctx.openFileInput(MainActivity.FULL_FILE_NAME) : ctx.getContentResolver().openInputStream(uri);
         try (BufferedReader in = new BufferedReader(new InputStreamReader(inputStream))) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
             while (in.ready()) {
                 String[] split = in.readLine().split(";");
-                WifiData wifiData = new WifiData();
+                Login login = new Login();
                 if (split.length >= 1) {
-                    wifiData.setWifiName(split[0]);
+                    login.setSSID(split[0]);
                     if (split.length >= 2) {
-                        wifiData.setUsername(split[1]);
+                        login.setUsername(split[1]);
                         if (split.length >= 3) {
                             if (uri != null) {
-                                wifiData.setPassword(prefs, split[2]);
+                                login.setPassword(split[2]);
                             }
                             if (split.length >= 4) {
-                                wifiData.setLastLogin(Long.parseLong(split[3]));
+                                login.setLastLogin(Long.parseLong(split[3]));
                             }
                         }
                     }
                 }
-                wifiDataList.add(wifiData);
+                dataList.add(login);
             }
         }
-        return wifiDataList;
+        return dataList;
     }
 
-    public static void writeData(Context ctx, List<WifiData> wifiDataList, Uri uri) throws FileNotFoundException {
+    public static void writeData(Context ctx, List<Login> dataList, Uri uri) throws FileNotFoundException {
         OutputStream outputStream = uri == null ? ctx.openFileOutput(MainActivity.FULL_FILE_NAME, Context.MODE_PRIVATE) : ctx.getContentResolver().openOutputStream(uri);
         try (PrintWriter out = new PrintWriter(new OutputStreamWriter(outputStream))) {
-            wifiDataList.forEach(wifiData -> out.println(wifiData.toCSVString(uri != null ? PreferenceManager.getDefaultSharedPreferences(ctx) : null)));
+            dataList.forEach(login -> out.println(login.toCSVString()));
         }
     }
 }

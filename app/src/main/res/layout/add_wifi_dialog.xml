@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:padding="5dp">
 
-    <Switch
+    <com.google.android.material.switchmaterial.SwitchMaterial
         android:id="@+id/manualInputSwitch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -12,4 +12,5 @@
             android:key="notificationBtn"
             android:title="@string/title_notification" />
     </PreferenceCategory>
+
 </PreferenceScreen>

@@ -2,7 +2,6 @@ package tk.bungeefan.captiveautologin.task;
 
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.CaptivePortal;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -15,7 +14,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.preference.PreferenceManager;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -49,7 +47,7 @@ import tk.bungeefan.captiveautologin.R;
 import tk.bungeefan.captiveautologin.Util;
 import tk.bungeefan.captiveautologin.activity.MainActivity;
 import tk.bungeefan.captiveautologin.activity.WebViewActivity;
-import tk.bungeefan.captiveautologin.data.WifiData;
+import tk.bungeefan.captiveautologin.data.entity.Login;
 
 public class LoginTask extends AsyncTask<String, String, String> {
 
@@ -61,10 +59,9 @@ public class LoginTask extends AsyncTask<String, String, String> {
     public static boolean taskRunning = false;
     private final CaptivePortal captivePortal;
     private final Network network;
-    private final WifiData wifiData;
+    private final Login loginData;
     private final NotificationManagerCompat mNotificationManager;
     private final ConnectivityManager mConnectivityManager;
-    private final SharedPreferences prefs;
     private final WeakReference<MainActivity> mContext;
     private URL lastUrl;
     private String requestMethod = "POST";
@@ -72,16 +69,15 @@ public class LoginTask extends AsyncTask<String, String, String> {
     private boolean unnecessaryOutputDisabled;
     private final int notificationId = 0;
 
-    public LoginTask(MainActivity context, WifiData wifiData, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
+    public LoginTask(MainActivity context, Login loginData, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
         if (taskRunning) {
             throw new IllegalThreadStateException("Another " + this.getClass().getSimpleName() + " is already running!");
         }
         this.mContext = new WeakReference<>(context);
-        this.wifiData = wifiData;
+        this.loginData = loginData;
         this.captivePortal = captivePortal;
         this.network = network;
         this.unnecessaryOutputDisabled = unnecessaryOutputDisabled;
-        this.prefs = PreferenceManager.getDefaultSharedPreferences(mContext.get());
         this.mNotificationManager = NotificationManagerCompat.from(mContext.get());
         this.mConnectivityManager = context.getSystemService(ConnectivityManager.class);
         try {
@@ -149,10 +145,10 @@ public class LoginTask extends AsyncTask<String, String, String> {
     protected void onPreExecute() {
         super.onPreExecute();
         taskRunning = true;
-        Log.d(TAG, this.getClass().getSimpleName() + " (" + wifiData.getSSID() + ") started!");
+        Log.d(TAG, this.getClass().getSimpleName() + " (" + loginData.getSSID() + ") started!");
         NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext.get(), MainActivity.CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_name)
-                .setContentTitle(mContext.get().getString(R.string.login_in_progress, wifiData.getSSID()))
+                .setContentTitle(mContext.get().getString(R.string.login_in_progress, loginData.getSSID()))
                 .setContentText(mContext.get().getString(R.string.login_try))
                 .setProgress(100, 0, true)
                 .setOngoing(true);
@@ -216,14 +212,14 @@ public class LoginTask extends AsyncTask<String, String, String> {
         super.onPostExecute(response);
         mConnectivityManager.bindProcessToNetwork(null);
 
-        wifiData.setLastLogin(System.currentTimeMillis());
+        loginData.setLastLogin(System.currentTimeMillis());
         //Sorting adapter
-        mContext.get().mListViewAdapter.sort((o1, o2) -> Long.compare(o2.getLastLogin(), o1.getLastLogin()));
+//        mContext.get().mListViewAdapter.notifyDataSetChanged();
 
         if (response != null && !response.isEmpty()) {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext.get(), MainActivity.CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_stat_name)
-                    .setContentTitle("(" + wifiData.getSSID() + ") " + mContext.get().getString(!failed ? R.string.login_successful : R.string.login_failed))
+                    .setContentTitle("(" + loginData.getSSID() + ") " + mContext.get().getString(!failed ? R.string.login_successful : R.string.login_failed))
                     .setContentText(response)
                     .setAutoCancel(true)
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(response));
@@ -231,7 +227,7 @@ public class LoginTask extends AsyncTask<String, String, String> {
             if (failed) {
                 Intent resultIntent = new Intent(mContext.get(), MainActivity.class)
                         .putExtra(FAILED_EXTRA, failed)
-                        .putExtra(WIFI_DATA_EXTRA, wifiData)
+                        .putExtra(WIFI_DATA_EXTRA, loginData.getId())
                         .putExtra(RESPONSE_EXTRA, response)
                         .putExtra(WebViewActivity.URL_EXTRA, lastUrl.toString());
                 pendingIntent = PendingIntent.getActivity(mContext.get(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -245,10 +241,10 @@ public class LoginTask extends AsyncTask<String, String, String> {
             mNotificationManager.notify(notificationId, builder.build());
         }
         if (failed && !unnecessaryOutputDisabled) {
-            mContext.get().loginFailed(captivePortal, wifiData, response, lastUrl.toString());
+            mContext.get().loginFailed(captivePortal, loginData, response, lastUrl.toString());
         }
         taskRunning = false;
-        Log.d(TAG, this.getClass().getSimpleName() + " (" + wifiData.getSSID() + ") finished!");
+        Log.d(TAG, this.getClass().getSimpleName() + " (" + loginData.getSSID() + ") finished!");
     }
 
     public LoginTask disableUnnecessaryOutput() {
@@ -262,8 +258,8 @@ public class LoginTask extends AsyncTask<String, String, String> {
 
     @NonNull
     private String getFormParams(String html) throws UnsupportedEncodingException {
-        String username = wifiData.getUsername();
-        String password = wifiData.getPassword(prefs);
+        String username = loginData.getUsername();
+        String password = loginData.getPassword();
 
         Document doc = Jsoup.parse(html);
 

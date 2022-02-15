@@ -3,7 +3,6 @@ package tk.bungeefan.captiveautologin.activity;
 import static android.net.ConnectivityManager.ACTION_CAPTIVE_PORTAL_SIGN_IN;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ActivityNotFoundException;
@@ -12,7 +11,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.ColorStateList;
 import android.net.CaptivePortal;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -23,13 +21,10 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.SearchView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -37,22 +32,29 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.documentfile.provider.DocumentFile;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import tk.bungeefan.captiveautologin.ILoginFailed;
 import tk.bungeefan.captiveautologin.R;
 import tk.bungeefan.captiveautologin.Util;
 import tk.bungeefan.captiveautologin.activity.fragment.AddWifiDialogFragment;
 import tk.bungeefan.captiveautologin.activity.fragment.WifiDetailsFragment;
-import tk.bungeefan.captiveautologin.data.WifiData;
-import tk.bungeefan.captiveautologin.data.WifiDataAdapter;
+import tk.bungeefan.captiveautologin.data.LoginAdapter;
+import tk.bungeefan.captiveautologin.data.LoginViewModel;
+import tk.bungeefan.captiveautologin.data.entity.Login;
 import tk.bungeefan.captiveautologin.task.CheckUpdateTask;
 import tk.bungeefan.captiveautologin.task.LoginTask;
 
@@ -71,9 +73,11 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     private static final int RQ_ACCESS_FINE_LOCATION = 1234;
     private static final int RQ_ACCESS_FINE_LOCATION_DIALOG = 1235;
     private static final String MIME_TYPE_CSV = "text/csv";
-    public List<WifiData> wifiDataList = new ArrayList<>();
-    public WifiDataAdapter<WifiData> mListViewAdapter;
-    private ListView listView;
+
+    private final CompositeDisposable mDisposable = new CompositeDisposable();
+    public LoginAdapter mListViewAdapter;
+    private LoginViewModel mLoginViewModel;
+    private RecyclerView recyclerView;
     private SearchView searchView;
     private SwipeRefreshLayout swipeRefresh;
 
@@ -95,6 +99,8 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mLoginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
+
         mWifiManager = getSystemService(WifiManager.class);
         mNotificationManager = getSystemService(NotificationManager.class);
         mConnectivityManager = getSystemService(ConnectivityManager.class);
@@ -108,67 +114,70 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         }
 
         if (intent.getBooleanExtra(LoginTask.FAILED_EXTRA, false)) {
-            loginFailed(intent.getParcelableExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL), (WifiData) intent.getSerializableExtra(LoginTask.WIFI_DATA_EXTRA), intent.getStringExtra(LoginTask.RESPONSE_EXTRA), intent.getStringExtra(WebViewActivity.URL_EXTRA));
+            int loginId = intent.getIntExtra(LoginTask.WIFI_DATA_EXTRA, -1);
+            if (loginId != -1) {
+                mDisposable.add(
+                        mLoginViewModel.getDatabase().loginDao().findById(loginId)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(login -> {
+                                    if (login != null) {
+                                        loginFailed(
+                                                intent.getParcelableExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL),
+                                                login,
+                                                intent.getStringExtra(LoginTask.RESPONSE_EXTRA),
+                                                intent.getStringExtra(WebViewActivity.URL_EXTRA)
+                                        );
+                                    }
+                                })
+                );
+            }
         }
-
 
         FloatingActionButton fab = findViewById(R.id.fab);
-        TypedValue typedValue = new TypedValue();
-        if (getTheme().resolveAttribute(R.attr.fabColor, typedValue, true)) {
-            fab.setBackgroundTintList(ColorStateList.valueOf(getColor(typedValue.resourceId)));
-            fab.setFocusable(true);
-        }
         fab.setOnClickListener(v -> showInputDialog());
-
 
         swipeRefresh = findViewById(R.id.swipeRefresh);
         swipeRefresh.setOnRefreshListener(() -> {
-            checkForWifi();
+            if (!mListViewAdapter.getCurrentList().isEmpty()) {
+                checkForWifi();
+            }
             swipeRefresh.setRefreshing(false);
         });
 
-
-        listView = findViewById(R.id.networkListView);
-        listView.setAdapter(mListViewAdapter = new WifiDataAdapter<>(this, R.layout.list_item, wifiDataList));
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            WifiData wifiData = mListViewAdapter.getItem(position);
-            if (wifiData != null) {
+        recyclerView = findViewById(R.id.networkListView);
+        recyclerView.setAdapter(mListViewAdapter = new LoginAdapter(loginData -> {
+            if (loginData != null) {
                 if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RQ_ACCESS_FINE_LOCATION);
                 } else {
                     String ssid = Util.replaceSSID(mWifiManager.getConnectionInfo().getSSID());
-                    if (!ssid.equals(wifiData.getSSID())) {
+                    if (!ssid.equals(loginData.getSSID())) {
                         DialogInterface.OnClickListener continueClick = (dialog, which) ->
-                                Util.loginWifi(this, wifiData, captivePortal, network, false);
+                                Util.loginWifi(this, loginData, captivePortal, network, false);
                         int title;
                         String message;
                         if (!Util.isUnknownSSID(ssid)) {
                             title = R.string.other_network_detected;
-                            message = String.format(getString(R.string.another_network), ssid, wifiData.getSSID());
+                            message = String.format(getString(R.string.another_network), ssid, loginData.getSSID());
                         } else {
-                            title = R.string.no_wifi_network_detected;
+                            title = R.string.no_network_detected;
                             message = getString(R.string.not_connected_to_network);
                         }
-                        new AlertDialog.Builder(this)
+                        new MaterialAlertDialogBuilder(this)
                                 .setTitle(getString(title))
                                 .setMessage(message)
                                 .setNegativeButton(getString(R.string.login_although), continueClick)
                                 .setPositiveButton(android.R.string.cancel, null)
                                 .show();
                     } else {
-                        Util.loginWifi(this, wifiData, captivePortal, network, false);
+                        Util.loginWifi(this, loginData, captivePortal, network, false);
                     }
                 }
             }
-        });
-        registerForContextMenu(listView);
+        }));
 
-        try {
-            wifiDataList.addAll(Util.readData(this, TAG, null));
-            mListViewAdapter.notifyDataSetChanged();
-        } catch (IOException e) {
-            Log.e(TAG, Log.getStackTraceString(e));
-        }
+        mLoginViewModel.getAllLogins().observe(this, list -> mListViewAdapter.submitList(list));
+        registerForContextMenu(recyclerView);
 
         createNotificationChannel();
 
@@ -193,6 +202,62 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
             }
         }, this::exportData);
         importLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), this::importData);
+
+        getSupportFragmentManager().setFragmentResultListener(AddWifiDialogFragment.REQUEST_KEY, this, (requestKey, bundle) -> {
+            Login newLogin = (Login) bundle.getSerializable(AddWifiDialogFragment.BUNDLE_KEY);
+
+            if (newLogin.getId() == null) {
+                mDisposable.add(mLoginViewModel.getDatabase().loginDao().findBySSID(newLogin.getSSID())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(logins -> {
+                            if (logins.isEmpty()) {
+                                mDisposable.add(
+                                        mLoginViewModel.getDatabase().loginDao().insertAll(newLogin)
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribe(() -> {
+                                                        },
+                                                        throwable -> {
+                                                            Log.e(TAG, "Unable to save login data", throwable);
+                                                            Snackbar.make(findViewById(R.id.content), getString(R.string.error_persisting_changes), Snackbar.LENGTH_SHORT).show();
+                                                        })
+                                );
+                            } else {
+                                runOnUiThread(() ->
+                                        new MaterialAlertDialogBuilder(this)
+                                                .setTitle(getString(R.string.error_title))
+                                                .setMessage(String.format(getString(R.string.entry_already_exists), newLogin.getSSID()))
+                                                .setPositiveButton(android.R.string.ok, null)
+                                                .show()
+                                );
+                            }
+                        }, throwable -> {
+                            Log.e(TAG, "Unable to check login data", throwable);
+                            Snackbar.make(findViewById(R.id.content), getString(R.string.error_persisting_changes), Snackbar.LENGTH_SHORT).show();
+                        })
+                );
+            } else {
+                mDisposable.add(mLoginViewModel.getDatabase().loginDao().update(newLogin)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(() -> {
+                                },
+                                throwable -> {
+                                    Log.e(TAG, "Unable to update login data", throwable);
+                                    Snackbar.make(findViewById(R.id.content), getString(R.string.error_persisting_changes), Snackbar.LENGTH_SHORT).show();
+                                }
+                        )
+                );
+            }
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        // clear all the subscriptions
+        mDisposable.clear();
     }
 
     @Override
@@ -223,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (grantResults.length > 0) {
             if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                var builder = new MaterialAlertDialogBuilder(this)
                         .setTitle(getString(R.string.permission_denied))
                         .setMessage(getString(R.string.permission_denied_description))
                         .setPositiveButton(getString(R.string.i_understand), null);
@@ -257,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RQ_ACCESS_FINE_LOCATION);
             }
         } else {
-            Util.checkForWifi(this, wifiDataList, mWifiManager, captivePortal, network, unnecessaryOutputDisabled);
+            Util.checkForWifi(this, mListViewAdapter.getCurrentList(), mWifiManager, captivePortal, network, unnecessaryOutputDisabled);
         }
     }
 
@@ -268,14 +333,26 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                mListViewAdapter.getFilter().filter(query);
+                searchDatabase(query);
                 return false;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                mListViewAdapter.getFilter().filter(newText);
+                searchDatabase(newText);
                 return false;
+            }
+
+            private void searchDatabase(String query) {
+                mDisposable.add(
+                        mLoginViewModel.getDatabase().loginDao().findByName(query)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(logins -> mListViewAdapter.submitList(logins), throwable -> {
+                                    Log.e(TAG, "Unable to query database", throwable);
+                                    Snackbar.make(findViewById(R.id.content), getString(R.string.unknown_error), Snackbar.LENGTH_SHORT).show();
+                                })
+                );
             }
         });
         return super.onCreateOptionsMenu(menu);
@@ -289,8 +366,8 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         }
     }
 
-    private void showInputDialog(WifiData oldWifiData) {
-        AddWifiDialogFragment addWifiDialogFragment = AddWifiDialogFragment.newInstance(oldWifiData);
+    private void showInputDialog(Login login) {
+        AddWifiDialogFragment addWifiDialogFragment = AddWifiDialogFragment.newInstance(login);
         addWifiDialogFragment.show(getSupportFragmentManager(), TAG);
     }
 
@@ -319,15 +396,15 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         String name = DocumentFile.fromSingleUri(this, uri).getName();
         Log.d(TAG, "Selected export uri: " + uri);
         try {
-            Util.writeData(MainActivity.this, wifiDataList, uri);
-            new AlertDialog.Builder(this)
+            Util.writeData(MainActivity.this, mListViewAdapter.getCurrentList(), uri);
+            new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.success)
                     .setMessage(String.format(getString(R.string.data_export_success), name))
                     .setPositiveButton(android.R.string.ok, null)
                     .show();
         } catch (IOException e) {
             Log.e(TAG, Log.getStackTraceString(e));
-            new AlertDialog.Builder(this)
+            new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.error_title)
                     .setMessage(String.format(getString(R.string.data_export_failed), name))
                     .setPositiveButton(android.R.string.ok, null)
@@ -340,18 +417,28 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
         String name = DocumentFile.fromSingleUri(this, uri).getName();
         try {
-            List<WifiData> importedWifiDataList = Util.readData(this, TAG, uri);
-            if (!importedWifiDataList.isEmpty()) {
-
-                mListViewAdapter.addAll(importedWifiDataList);
-                Util.writeData(MainActivity.this, this.wifiDataList, null);
-                new AlertDialog.Builder(this)
-                        .setTitle(R.string.success)
-                        .setMessage(R.string.data_import_success)
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
+            List<Login> importedDataList = Util.readData(this, TAG, uri);
+            if (!importedDataList.isEmpty()) {
+                mDisposable.add(mLoginViewModel.getDatabase().loginDao().insertAll(importedDataList)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(() -> new MaterialAlertDialogBuilder(this)
+                                        .setTitle(R.string.success)
+                                        .setMessage(R.string.data_import_success)
+                                        .setPositiveButton(android.R.string.ok, null)
+                                        .show(),
+                                throwable -> {
+                                    Log.e(TAG, "Failed to save imported logins", throwable);
+                                    new MaterialAlertDialogBuilder(this)
+                                            .setTitle(R.string.error_title)
+                                            .setMessage(String.format(getString(R.string.data_import_failed), name))
+                                            .setPositiveButton(android.R.string.ok, null)
+                                            .show();
+                                }
+                        )
+                );
             } else {
-                new AlertDialog.Builder(this)
+                new MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.error_title)
                         .setMessage(R.string.no_data_found)
                         .setPositiveButton(android.R.string.ok, null)
@@ -359,7 +446,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
             }
         } catch (IOException e) {
             Log.e(TAG, Log.getStackTraceString(e));
-            new AlertDialog.Builder(this)
+            new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.error_title)
                     .setMessage(String.format(getString(R.string.data_import_failed), name))
                     .setPositiveButton(android.R.string.ok, null)
@@ -375,33 +462,32 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        AdapterView.AdapterContextMenuInfo contextMenuInfo = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-        WifiData wifiData = mListViewAdapter.getItem(contextMenuInfo.position);
+        Login loginData = mListViewAdapter.getSelectedItem();
         switch (item.getItemId()) {
             case R.id.context_edit:
-                showInputDialog(wifiData);
+                showInputDialog(loginData);
                 break;
             case R.id.context_delete:
-                new AlertDialog.Builder(this)
+                new MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.warning)
-                        .setMessage(String.format(getString(R.string.removing_wifi), wifiData.getSSID()))
-                        .setPositiveButton(android.R.string.yes, (dialog, which) -> {
-                            mListViewAdapter.remove(wifiData);
-                            try {
-                                Util.writeData(this, wifiDataList, null);
-                            } catch (IOException e) {
-                                Log.e(TAG, Log.getStackTraceString(e));
-                                new AlertDialog.Builder(this)
-                                        .setTitle(R.string.error_title)
-                                        .setPositiveButton(android.R.string.ok, null)
-                                        .show();
-                            }
-                        })
+                        .setMessage(String.format(getString(R.string.removing_wifi), loginData.getSSID()))
+                        .setPositiveButton(android.R.string.yes, (dialog, which) ->
+                                mDisposable.add(mLoginViewModel.getDatabase().loginDao().delete(loginData)
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribe(() -> {
+                                            Snackbar.make(findViewById(R.id.content), String.format(getString(R.string.removed_wifi), loginData.getSSID()), Snackbar.LENGTH_SHORT).show();
+                                        }, throwable -> {
+                                            Log.e(TAG, "Failed to delete login data", throwable);
+                                            Snackbar.make(findViewById(R.id.content), getString(R.string.error_persisting_changes), Snackbar.LENGTH_SHORT).show();
+                                        })
+                                )
+                        )
                         .setNegativeButton(android.R.string.cancel, null)
                         .show();
                 break;
             case R.id.context_details:
-                WifiDetailsFragment wifiDetailsFragment = WifiDetailsFragment.newInstance(wifiData);
+                WifiDetailsFragment wifiDetailsFragment = WifiDetailsFragment.newInstance(loginData);
                 wifiDetailsFragment.show(getSupportFragmentManager(), TAG);
                 break;
         }
@@ -409,9 +495,9 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     }
 
     @Override
-    public void loginFailed(CaptivePortal captivePortal, WifiData wifiData, String response, String url) {
-        new AlertDialog.Builder(this)
-                .setTitle(wifiData.getSSID() + " - " + getString(R.string.error)).setMessage(response + " " + getString(R.string.try_manual_login))
+    public void loginFailed(CaptivePortal captivePortal, Login loginData, String response, String url) {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(loginData.getSSID() + " - " + getString(R.string.error_title)).setMessage(response + "\n" + getString(R.string.try_manual_login))
                 .setPositiveButton(getString(R.string.login_manually), (dialog, which) -> {
                     try {
                         try {
@@ -429,8 +515,8 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                         }
                     } catch (ActivityNotFoundException e) {
                         Log.e(TAG, Log.getStackTraceString(e));
-                        new AlertDialog.Builder(this)
-                                .setTitle(getString(R.string.error))
+                        new MaterialAlertDialogBuilder(this)
+                                .setTitle(getString(R.string.error_title))
                                 .setMessage(String.format(getString(R.string.no_url_activity), url))
                                 .setPositiveButton(android.R.string.ok, null)
                                 .show();

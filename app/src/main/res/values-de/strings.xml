@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">CaptiveAutoLogin</string>
-    <string name="add_wifi_login">CaptivePortal-Login hinzufügen</string>
     <string name="edit">Bearbeiten</string>
     <string name="login">Anmelden</string>
     <string name="password">Passwort</string>
@@ -10,7 +9,8 @@
     <string name="username">Email/Benutzername</string>
     <string name="add">Hinzufügen</string>
     <string name="details">Details</string>
-    <string name="edit_wifi_login">CaptivePortal-Login bearbeiten</string>
+    <string name="add_login_title">CaptivePortal-Login hinzufügen</string>
+    <string name="edit_login_title">CaptivePortal-Login bearbeiten</string>
     <string name="version_up_to_date">Deine Version ist up to date!</string>
     <string name="update_check_failed">Updateprüfung fehlgeschlagen!</string>
     <string name="password_saved">Passwort gespeichert</string>
@@ -18,8 +18,8 @@
     <string name="already_logged_in">Bereits eingeloggt</string>
     <string name="another_network">Dein aktuelles genutztes Netzwerk (%s) ist nicht dasselbe als das du ausgewählt hast (%s)!</string>
     <string name="entry_already_exists">Ein CaptivePortal-Login mit der SSID (%s) existiert bereits! Stattdessen versuche es zu bearbeiten.</string>
-    <string name="error">Fehler</string>
-    <string name="failed_with_error">Fehlgeschlagen mit dem Fehler: %s</string>
+    <string name="unknown_error">Unbekannter Fehler</string>
+    <string name="failed_with_error">Fehlgeschlagen mit dem Fehler: "%s"</string>
     <string name="failed_with_http_code">Fehlgeschlagen mit dem HTTP Code: "%d"</string>
     <string name="i_understand">Ich verstehe</string>
     <string name="new_version_action">Update</string>
@@ -37,8 +37,8 @@
     <string name="new_version_available">Neues Update (Version: %d) verfügbar!</string>
     <string name="no_saved_password">Kein gespeichertes Passwort</string>
     <string name="no_url_activity">Konnte die URL %s auf deinem Handy nicht öffnen!</string>
-    <string name="no_wifi_network_detected">Es konnte kein Wifi Netzwerk erkannt werden!</string>
-    <string name="not_connected_to_network">Du bist zurzeit mit keinem Wifi Netzwerk verbunden!</string>
+    <string name="no_network_detected">Es konnte kein Netzwerk erkannt werden!</string>
+    <string name="not_connected_to_network">Du bist zurzeit mit keinem Netzwerk verbunden!</string>
     <string name="other_network_detected">Anderes Netzwerk erkannt!</string>
     <string name="try_manual_login">Versuche stattdessen manuell einzuloggen!</string>
     <string name="permission_denied_description">Berechtigung wurde nicht erteilt deshalb kann die App nicht vollständig funktionieren!</string>
@@ -54,7 +54,8 @@
     <string name="success">Erfolgreich</string>
     <string name="warning">Warnung</string>
     <string name="error_title">Fehler</string>
-    <string name="removing_wifi">Bist du dir sicher, dass du das Wlan (%s) entfernen möchtest?</string>
+    <string name="removing_wifi">Bist du dir sicher, dass du das Wi-Fi (%s) entfernen möchtest?</string>
+    <string name="removed_wifi">Wi-Fi (%s) wurde erfolgreich entfernt!</string>
     <string name="title_settings">Einstellungen</string>
     <string name="title_theme">Theme</string>
     <string name="theme_light">Hell</string>
@@ -66,4 +67,5 @@
     <string name="title_notification">Benachrichtigungen</string>
     <string name="no_data_found">Keine Daten gefunden!</string>
     <string name="open_permission_settings">Öffne Einstellungen</string>
+    <string name="error_persisting_changes">Ihre Änderungen konnten nicht gespeichert werden!</string>
 </resources>

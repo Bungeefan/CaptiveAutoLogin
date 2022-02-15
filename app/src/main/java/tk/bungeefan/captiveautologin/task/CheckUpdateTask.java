@@ -78,7 +78,6 @@ public class CheckUpdateTask extends AsyncTask<Void, Long, Long> {
                         Snackbar.LENGTH_SHORT);
                 TextView snackBarTextView = snackbar.getView().findViewById(R.id.snackbar_text);
                 snackBarTextView.setTypeface(snackBarTextView.getTypeface(), Typeface.BOLD);
-                snackBarTextView.setTextColor(mContext.get().getColor(R.color.colorAccent));
                 snackbar.show();
             } else {
                 if (!unnecessaryOutputDisabled) {
