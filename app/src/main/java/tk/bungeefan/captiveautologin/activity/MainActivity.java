@@ -7,7 +7,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -43,6 +42,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -150,28 +150,35 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RQ_ACCESS_FINE_LOCATION);
                 } else {
+                    Consumer<Void> loginWifi = (unused) -> Util.loginWifi(this, loginData, captivePortal, network, false);
+
                     String ssid = Util.replaceSSID(mWifiManager.getConnectionInfo().getSSID());
+                    int title = -1;
+                    String message = null;
+
                     if (!ssid.equals(loginData.getSSID())) {
-                        DialogInterface.OnClickListener continueClick = (dialog, which) ->
-                                Util.loginWifi(this, loginData, captivePortal, network, false);
-                        int title;
-                        String message;
                         if (!Util.isUnknownSSID(ssid)) {
-                            title = R.string.other_network_detected;
-                            message = String.format(getString(R.string.another_network), ssid, loginData.getSSID());
+                            if (prefs.getBoolean("pref_network_mismatch_warning", true)) {
+                                title = R.string.other_network_detected;
+                                message = String.format(getString(R.string.another_network), ssid, loginData.getSSID());
+                            }
                         } else {
                             title = R.string.no_network_detected;
                             message = getString(R.string.not_connected_to_network);
                         }
+                    }
+
+                    if (title != -1) {
                         new MaterialAlertDialogBuilder(this)
                                 .setTitle(getString(title))
                                 .setMessage(message)
-                                .setNegativeButton(getString(R.string.login_although), continueClick)
+                                .setNegativeButton(getString(R.string.login_anyway), (dialog, which) -> loginWifi.accept(null))
                                 .setPositiveButton(android.R.string.cancel, null)
                                 .show();
-                    } else {
-                        Util.loginWifi(this, loginData, captivePortal, network, false);
+                        return;
                     }
+
+                    loginWifi.accept(null);
                 }
             }
         }));

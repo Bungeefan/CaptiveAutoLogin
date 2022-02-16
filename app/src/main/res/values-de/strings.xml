@@ -26,7 +26,7 @@
     <string name="installing_new_update">Installation gestartet…</string>
     <string name="logged_in_successfully">Erfolgreich eingeloggt!</string>
     <string name="login_already_in_progress">Login bereits in Arbeit!</string>
-    <string name="login_although">Ich verstehe, trotzdem einloggen</string>
+    <string name="login_anyway">Ich verstehe, trotzdem einloggen</string>
     <string name="login_failed">Login fehlgeschlagen</string>
     <string name="login_in_progress">(%s) Login in Arbeit!</string>
     <string name="login_manually">Manuell einloggen</string>
@@ -57,15 +57,17 @@
     <string name="removing_wifi">Bist du dir sicher, dass du das Wi-Fi (%s) entfernen möchtest?</string>
     <string name="removed_wifi">Wi-Fi (%s) wurde erfolgreich entfernt!</string>
     <string name="title_settings">Einstellungen</string>
-    <string name="title_theme">Theme</string>
+    <string name="pref_title_theme">Theme</string>
     <string name="theme_light">Hell</string>
     <string name="theme_dark">Dunkel</string>
     <string name="theme_system_default">System Einstellung</string>
     <string name="theme_auto_battery">Akku Einstellung</string>
     <string name="last_login">Letzter Login</string>
     <string name="manual_input">Manuelle Eingabe</string>
-    <string name="title_notification">Benachrichtigungen</string>
     <string name="no_data_found">Keine Daten gefunden!</string>
     <string name="open_permission_settings">Öffne Einstellungen</string>
     <string name="error_persisting_changes">Ihre Änderungen konnten nicht gespeichert werden!</string>
+    <string name="notifications_settings">Benachrichtigungen</string>
+    <string name="general_settings">Allgemein</string>
+    <string name="pref_title_network_mismatch">Warnung bei unterschiedlichen Wi-Fi\'s</string>
 </resources>
