@@ -9,11 +9,13 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -43,10 +45,14 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import tk.bungeefan.captiveautologin.R;
 import tk.bungeefan.captiveautologin.Util;
 import tk.bungeefan.captiveautologin.activity.MainActivity;
 import tk.bungeefan.captiveautologin.activity.WebViewActivity;
+import tk.bungeefan.captiveautologin.data.LoginViewModel;
 import tk.bungeefan.captiveautologin.data.entity.Login;
 
 public class LoginTask extends AsyncTask<String, String, String> {
@@ -60,9 +66,11 @@ public class LoginTask extends AsyncTask<String, String, String> {
     private final CaptivePortal captivePortal;
     private final Network network;
     private final Login loginData;
+    private final CompositeDisposable mDisposable = new CompositeDisposable();
     private final NotificationManagerCompat mNotificationManager;
     private final ConnectivityManager mConnectivityManager;
     private final WeakReference<MainActivity> mContext;
+    private final LoginViewModel mLoginViewModel;
     private URL lastUrl;
     private String requestMethod = "POST";
     private boolean failed = false;
@@ -74,6 +82,7 @@ public class LoginTask extends AsyncTask<String, String, String> {
             throw new IllegalThreadStateException("Another " + this.getClass().getSimpleName() + " is already running!");
         }
         this.mContext = new WeakReference<>(context);
+        this.mLoginViewModel = new ViewModelProvider(mContext.get()).get(LoginViewModel.class);
         this.loginData = loginData;
         this.captivePortal = captivePortal;
         this.network = network;
@@ -213,8 +222,17 @@ public class LoginTask extends AsyncTask<String, String, String> {
         mConnectivityManager.bindProcessToNetwork(null);
 
         loginData.setLastLogin(System.currentTimeMillis());
-        //Sorting adapter
-//        mContext.get().mListViewAdapter.notifyDataSetChanged();
+        mDisposable.add(mLoginViewModel.getDatabase().loginDao().update(loginData)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> {
+                        },
+                        throwable -> {
+                            Log.e(TAG, "Unable to update last-login data", throwable);
+                            Toast.makeText(mContext.get(), mContext.get().getString(R.string.error_persisting_changes), Toast.LENGTH_SHORT).show();
+                        }
+                )
+        );
 
         if (response != null && !response.isEmpty()) {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext.get(), MainActivity.CHANNEL_ID)
@@ -243,6 +261,9 @@ public class LoginTask extends AsyncTask<String, String, String> {
         if (failed && !unnecessaryOutputDisabled) {
             mContext.get().loginFailed(captivePortal, loginData, response, lastUrl.toString());
         }
+
+        mDisposable.clear();
+
         taskRunning = false;
         Log.d(TAG, this.getClass().getSimpleName() + " (" + loginData.getSSID() + ") finished!");
     }
