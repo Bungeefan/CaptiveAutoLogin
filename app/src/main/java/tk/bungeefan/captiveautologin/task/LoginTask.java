@@ -131,19 +131,30 @@ public class LoginTask extends AsyncTask<String, String, String> {
     private HttpURLConnection createConnection(URL connectUrl, boolean withRedirects) throws IOException {
         this.lastUrl = connectUrl;
         HttpURLConnection conn = (HttpURLConnection) connectUrl.openConnection();
+        conn.setInstanceFollowRedirects(withRedirects);
         Log.d(TAG, "Created connection to " + connectUrl);
         conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android;CaptiveLogin)");
         conn.setUseCaches(false);
+
         if (withRedirects) {
-            int responseCode = conn.getResponseCode();
             // Maybe needed
             conn.connect();
-            String location = conn.getHeaderField("Location");
-            if (location != null) {
-                URL newUrl = new URL(location);
-                if (!connectUrl.equals(newUrl)) {
-                    Log.d(TAG, "Following \"" + newUrl + "\" redirect because of HTTP Code: " + responseCode);
-                    return createConnection(newUrl, true);
+
+            // normally, 3xx is redirect
+            int status = conn.getResponseCode();
+            if (status != HttpURLConnection.HTTP_OK) {
+                if (status == HttpURLConnection.HTTP_MOVED_TEMP
+                        || status == HttpURLConnection.HTTP_MOVED_PERM
+                        || status == HttpURLConnection.HTTP_SEE_OTHER) {
+                    String location = conn.getHeaderField("Location");
+                    if (location != null) {
+                        URL newUrl = new URL(location);
+                        if (!connectUrl.equals(newUrl)) {
+                            Log.d(TAG, "Following \"" + newUrl + "\" redirect because of HTTP Code: " + status);
+                            conn.disconnect();
+                            return createConnection(newUrl, true);
+                        }
+                    }
                 }
             }
         }
