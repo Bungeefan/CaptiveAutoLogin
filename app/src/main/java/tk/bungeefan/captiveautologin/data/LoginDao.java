@@ -17,7 +17,7 @@ import tk.bungeefan.captiveautologin.data.entity.Login;
 @Dao
 public interface LoginDao {
 
-    @Query("SELECT * FROM login ORDER BY last_login DESC")
+    @Query("SELECT * FROM login ORDER BY last_login DESC, SSID ASC")
     LiveData<List<Login>> observeAll();
 
     @Query("SELECT * FROM login")

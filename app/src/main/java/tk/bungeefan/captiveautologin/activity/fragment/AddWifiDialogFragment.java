@@ -134,8 +134,8 @@ public class AddWifiDialogFragment extends DialogFragment {
 
                     Login newLogin = login != null ? login : new Login();
                     newLogin.setSSID(wifiName);
-                    newLogin.setUsername(username);
-                    newLogin.setPassword(password);
+                    newLogin.setUsername(!username.isEmpty() ? username : null);
+                    newLogin.setPassword(!password.isEmpty() ? password : null);
 
                     Bundle result = new Bundle();
                     result.putSerializable(BUNDLE_KEY, newLogin);
