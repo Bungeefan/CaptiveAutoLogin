@@ -10,33 +10,20 @@
         android:orientation="vertical"
         android:padding="5dp">
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/manualInputSwitch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
-            android:text="@string/manual_input" />
-
-        <Spinner
-            android:id="@+id/wifiSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/input_layout_ssid"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:endIconMode="clear_text">
+            android:layout_height="wrap_content">
 
-            <com.google.android.material.textfield.TextInputEditText
+            <AutoCompleteTextView
                 android:id="@+id/ssidField"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:autofillHints="SSID"
                 android:hint="SSID"
                 android:inputType="text" />
+
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
