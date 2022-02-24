@@ -13,11 +13,11 @@ import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.DialogFragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.List;
@@ -83,7 +83,7 @@ public class AddWifiDialogFragment extends DialogFragment {
 
         wifiSpinner.setAdapter(mWifiSpinnerAdapter);
 
-        SwitchCompat manualInputSwitch = view.findViewById(R.id.manualInputSwitch);
+        SwitchMaterial manualInputSwitch = view.findViewById(R.id.manualInputSwitch);
         manualInputSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             wifiSpinner.setVisibility(isChecked ? View.GONE : View.VISIBLE);
             input_layout_ssid.setVisibility(isChecked ? View.VISIBLE : View.GONE);
