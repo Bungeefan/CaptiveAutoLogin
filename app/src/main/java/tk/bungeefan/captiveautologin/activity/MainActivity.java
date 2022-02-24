@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                         if (!Util.isUnknownSSID(ssid)) {
                             if (prefs.getBoolean("pref_network_mismatch_warning", true)) {
                                 title = R.string.other_network_detected;
-                                message = String.format(getString(R.string.another_network), ssid, loginData.getSSID());
+                                message = getString(R.string.another_network, ssid, loginData.getSSID());
                             }
                         } else {
                             title = R.string.no_network_detected;
@@ -231,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                                 runOnUiThread(() ->
                                         new MaterialAlertDialogBuilder(this)
                                                 .setTitle(getString(R.string.error_title))
-                                                .setMessage(String.format(getString(R.string.entry_already_exists), newLogin.getSSID()))
+                                                .setMessage(getString(R.string.entry_already_exists, newLogin.getSSID()))
                                                 .setPositiveButton(android.R.string.ok, null)
                                                 .show()
                                 );
@@ -404,14 +404,14 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
             Util.writeData(MainActivity.this, mListViewAdapter.getCurrentList(), uri);
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.success)
-                    .setMessage(String.format(getString(R.string.data_export_success), name))
+                    .setMessage(getString(R.string.data_export_success, name))
                     .setPositiveButton(android.R.string.ok, null)
                     .show();
         } catch (IOException e) {
             Log.e(TAG, Log.getStackTraceString(e));
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.error_title)
-                    .setMessage(String.format(getString(R.string.data_export_failed), name))
+                    .setMessage(getString(R.string.data_export_failed, name))
                     .setPositiveButton(android.R.string.ok, null)
                     .show();
         }
@@ -436,7 +436,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                                     Log.e(TAG, "Failed to save imported logins", throwable);
                                     new MaterialAlertDialogBuilder(this)
                                             .setTitle(R.string.error_title)
-                                            .setMessage(String.format(getString(R.string.data_import_failed), name))
+                                            .setMessage(getString(R.string.data_import_failed, name))
                                             .setPositiveButton(android.R.string.ok, null)
                                             .show();
                                 }
@@ -453,7 +453,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
             Log.e(TAG, Log.getStackTraceString(e));
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.error_title)
-                    .setMessage(String.format(getString(R.string.data_import_failed), name))
+                    .setMessage(getString(R.string.data_import_failed, name))
                     .setPositiveButton(android.R.string.ok, null)
                     .show();
         }
@@ -475,13 +475,13 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
             case R.id.context_delete:
                 new MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.warning)
-                        .setMessage(String.format(getString(R.string.removing_wifi), loginData.getSSID()))
+                        .setMessage(getString(R.string.removing_wifi, loginData.getSSID()))
                         .setPositiveButton(android.R.string.yes, (dialog, which) ->
                                 mDisposable.add(mLoginViewModel.getDatabase().loginDao().delete(loginData)
                                         .subscribeOn(Schedulers.io())
                                         .observeOn(AndroidSchedulers.mainThread())
                                         .subscribe(() -> {
-                                            Snackbar.make(findViewById(R.id.content), String.format(getString(R.string.removed_wifi), loginData.getSSID()), Snackbar.LENGTH_SHORT).show();
+                                            Snackbar.make(findViewById(R.id.content), getString(R.string.removed_wifi, loginData.getSSID()), Snackbar.LENGTH_SHORT).show();
                                         }, throwable -> {
                                             Log.e(TAG, "Failed to delete login data", throwable);
                                             Snackbar.make(findViewById(R.id.content), getString(R.string.error_persisting_changes), Snackbar.LENGTH_SHORT).show();
@@ -522,7 +522,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                         Log.e(TAG, Log.getStackTraceString(e));
                         new MaterialAlertDialogBuilder(this)
                                 .setTitle(getString(R.string.error_title))
-                                .setMessage(String.format(getString(R.string.no_url_activity), url))
+                                .setMessage(getString(R.string.no_url_activity, url))
                                 .setPositiveButton(android.R.string.ok, null)
                                 .show();
                     }
