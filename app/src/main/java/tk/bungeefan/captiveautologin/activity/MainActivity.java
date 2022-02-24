@@ -210,6 +210,16 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
         getSupportFragmentManager().setFragmentResultListener(AddWifiDialogFragment.REQUEST_KEY, this, (requestKey, bundle) -> {
             Login newLogin = (Login) bundle.getSerializable(AddWifiDialogFragment.BUNDLE_KEY);
+            if (newLogin == null) return;
+
+            if (newLogin.getSSID().isEmpty()) {
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(getString(R.string.error_title))
+                        .setMessage(getString(R.string.empty_wifi_name))
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+                return;
+            }
 
             if (newLogin.getId() == null) {
                 mDisposable.add(mLoginViewModel.getDatabase().loginDao().findBySSID(newLogin.getSSID())
