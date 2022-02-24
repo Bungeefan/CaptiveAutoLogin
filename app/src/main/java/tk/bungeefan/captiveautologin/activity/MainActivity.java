@@ -214,8 +214,8 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
             if (newLogin.getSSID().isEmpty()) {
                 new MaterialAlertDialogBuilder(this)
-                        .setTitle(getString(R.string.error_title))
-                        .setMessage(getString(R.string.empty_wifi_name))
+                        .setTitle(R.string.error_title)
+                        .setMessage(R.string.empty_wifi_name)
                         .setPositiveButton(android.R.string.ok, null)
                         .show();
                 return;
