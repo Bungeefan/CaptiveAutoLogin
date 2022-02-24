@@ -14,7 +14,14 @@
 
         <SwitchPreference
             android:defaultValue="true"
+            android:key="pref_auto_login_on_connect"
+            android:summary="@string/location_permission_required"
+            android:title="@string/pref_title_auto_login_on_connect" />
+
+        <SwitchPreference
+            android:defaultValue="true"
             android:key="pref_network_mismatch_warning"
+            android:summary="@string/location_permission_required"
             android:title="@string/pref_title_network_mismatch" />
 
     </PreferenceCategory>
@@ -24,9 +31,19 @@
         app:title="@string/notifications_settings">
 
         <Preference
-            android:key="notifications"
             android:icon="@drawable/baseline_notifications_24dp"
+            android:key="notifications"
             android:title="@string/notifications_settings" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:key="notifications_category"
+        app:title="@string/reset_settings">
+
+        <Preference
+            android:key="reset_dismissed_content"
+            android:title="@string/reset_dismissed_content" />
 
     </PreferenceCategory>
 

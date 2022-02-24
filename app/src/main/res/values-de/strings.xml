@@ -14,14 +14,13 @@
     <string name="version_up_to_date">Deine Version ist up to date!</string>
     <string name="update_check_failed">Updateprüfung fehlgeschlagen!</string>
     <string name="password_saved">Passwort gespeichert</string>
-    <string name="permission_denied">Berechtigung verweigert!</string>
+    <string name="permission_denied">Berechtigung abgelehnt</string>
     <string name="already_logged_in">Bereits eingeloggt</string>
     <string name="another_network">Dein aktuelles genutztes Netzwerk (%s) ist nicht dasselbe als das du ausgewählt hast (%s)!</string>
     <string name="entry_already_exists">Ein CaptivePortal-Login mit der SSID (%s) existiert bereits! Stattdessen versuche es zu bearbeiten.</string>
     <string name="unknown_error">Unbekannter Fehler</string>
     <string name="failed_with_error">Fehlgeschlagen mit dem Fehler: "%s"</string>
     <string name="failed_with_http_code">Fehlgeschlagen mit dem HTTP Code: "%d"</string>
-    <string name="i_understand">Ich verstehe</string>
     <string name="new_version_action">Update</string>
     <string name="installing_new_update">Installation gestartet…</string>
     <string name="logged_in_successfully">Erfolgreich eingeloggt!</string>
@@ -41,7 +40,7 @@
     <string name="not_connected_to_network">Du bist zurzeit mit keinem Netzwerk verbunden!</string>
     <string name="other_network_detected">Anderes Netzwerk erkannt!</string>
     <string name="try_manual_login">Versuche stattdessen manuell einzuloggen!</string>
-    <string name="permission_denied_description">Berechtigung wurde nicht erteilt deshalb kann die App nicht vollständig funktionieren!</string>
+    <string name="permission_denied_description">Berechtigung verweigert, einige Funktionen funktionieren möglicherweise nicht!</string>
     <string name="downloading_update">Update wird heruntergeladen…</string>
     <string name="update_check">Auf neue Version überprüfen</string>
     <string name="data_import_failed">Daten von \"%s\" konnten nicht importiert werden</string>
@@ -70,5 +69,13 @@
     <string name="notifications_settings">Benachrichtigungen</string>
     <string name="general_settings">Allgemein</string>
     <string name="pref_title_network_mismatch">Warnung bei unterschiedlichen Wi-Fi\'s</string>
+    <string name="rational_location_permission_title">Standort-Berechtigung</string>
+    <string name="rational_location_permission_description">Die App ist in der Lage komplett ohne diese Berechtigung zu funktionieren, aber Sie verpassen dadurch eine Reihe an hilfreichen Features!\nMit dieser Berechtigung sind wir in der Lage Ihnen eine Auswahl an ihrem Gerät bekannten Netzwerken zu bieten und Ihnen somit die Eingabe zu erleichtern, außerdem werden Sie automatisch eingeloggt, sobald eine Verbindung mit einem bekanntem Captive Portal hergestellt wird.\n\nWir benutzen diese Berechtigung nicht, um Sie in irgendeiner Weise zu tracken!</string>
+    <string name="grant_permission">Verstanden</string>
     <string name="empty_wifi_name">Der Wi-Fi Name darf nicht leer sein!</string>
+    <string name="pref_title_auto_login_on_connect">Automatische Anmeldung beim Verbinden</string>
+    <string name="location_permission_required">Funktioniert nur, wenn die Standort-Berechtigung erteilt wurde!</string>
+    <string name="reset_settings">Zurücksetzen</string>
+    <string name="reset_dismissed_content">Abgelehnte  Dialogfenster zurücksetzen</string>
+    <string name="dismissed_content_reset">Abgelehnte Dialogfenster wurden zurückgesetzt</string>
 </resources>

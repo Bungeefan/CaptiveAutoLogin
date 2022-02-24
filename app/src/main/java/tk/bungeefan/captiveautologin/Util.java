@@ -1,11 +1,10 @@
 package tk.bungeefan.captiveautologin;
 
-import android.Manifest;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.net.CaptivePortal;
 import android.net.Network;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -33,13 +32,11 @@ public class Util {
         return ssid.replace("\"", "");
     }
 
-    public static void checkForWifi(MainActivity ctx, List<Login> list, WifiManager wifiManager, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
-        if (ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            String ssid = replaceSSID(wifiManager.getConnectionInfo().getSSID());
-            if (!isUnknownSSID(ssid)) {
-                list.stream().filter(login -> login.getSSID().equals(ssid))
-                        .forEach(login -> loginWifi(ctx, login, captivePortal, network, unnecessaryOutputDisabled));
-            }
+    public static void checkForWifi(MainActivity ctx, List<Login> list, WifiInfo wifiInfo, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
+        String ssid = replaceSSID(wifiInfo.getSSID());
+        if (!isUnknownSSID(ssid)) {
+            list.stream().filter(login -> login.getSSID().equals(ssid))
+                    .forEach(login -> loginWifi(ctx, login, captivePortal, network, unnecessaryOutputDisabled));
         }
     }
 

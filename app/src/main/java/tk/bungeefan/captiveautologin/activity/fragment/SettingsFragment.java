@@ -9,7 +9,11 @@ import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
+
 import tk.bungeefan.captiveautologin.R;
+import tk.bungeefan.captiveautologin.activity.MainActivity;
 import tk.bungeefan.captiveautologin.activity.SettingsActivity;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
@@ -37,6 +41,15 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                         .putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName())
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
+                return true;
+            });
+        }
+
+        Preference resetDismissedContent = findPreference("reset_dismissed_content");
+        if (resetDismissedContent != null) {
+            resetDismissedContent.setOnPreferenceClickListener(pref -> {
+                getPreferenceManager().getSharedPreferences().edit().remove(MainActivity.PREF_PERMISSION_KEY).apply();
+                Snackbar.make(requireView(), R.string.dismissed_content_reset, BaseTransientBottomBar.LENGTH_SHORT).show();
                 return true;
             });
         }
