@@ -44,7 +44,7 @@ public class Util {
     }
 
     public static boolean isUnknownSSID(String ssid) {
-        return ssid.equals("<unknown ssid>");
+        return ssid.equals(WifiManager.UNKNOWN_SSID);
     }
 
     public static void loginWifi(MainActivity ctx, Login login, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
