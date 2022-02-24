@@ -58,7 +58,6 @@ import tk.bungeefan.captiveautologin.data.entity.Login;
 import tk.bungeefan.captiveautologin.task.CheckUpdateTask;
 import tk.bungeefan.captiveautologin.task.LoginTask;
 
-
 public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
     public static final String UPDATE_URL = "https://bungeefan.ddns.net/captiveautologin/";
@@ -94,7 +93,6 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        SettingsActivity.setTheme(prefs);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
