@@ -27,7 +27,8 @@
             android:id="@+id/input_layout_ssid"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone">
+            android:visibility="gone"
+            app:endIconMode="clear_text">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/ssidField"
@@ -41,7 +42,8 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/input_layout_username"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:endIconMode="clear_text">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/usernameField"
