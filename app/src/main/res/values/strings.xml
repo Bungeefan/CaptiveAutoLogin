@@ -16,11 +16,10 @@
     <string name="edit_login_title">Edit CaptivePortal-Login</string>
     <string name="update_check">Update</string>
     <string name="details">Details</string>
-    <string name="permission_denied">Permission denied!</string>
+    <string name="permission_denied">Permission denied</string>
     <string name="login_notification_channel">Login</string>
     <string name="login_notification_channel_description">Notifies you about the login process</string>
-    <string name="permission_denied_description">Permission was not granted so the app can not fully work!</string>
-    <string name="i_understand">I understand</string>
+    <string name="permission_denied_description">Permission denied, some features may not work!</string>
     <string name="try_manual_login">Try to log in manually instead!</string>
     <string name="unknown_error">Unknown Error</string>
     <string name="error_persisting_changes">There was an error persisting your changes!</string>
@@ -69,5 +68,13 @@
     <string name="notifications_settings">Notifications</string>
     <string name="general_settings">General</string>
     <string name="pref_title_network_mismatch">Warn on different Wi-Fi\'s</string>
+    <string name="rational_location_permission_title">Location permission</string>
+    <string name="rational_location_permission_description">The app is capable to function without the location permission, but you will miss some great convenient features!\nWith this permission we are able to provide you with a list of networks known to your device, we are also able to automatically detect a known captive portal when you connect to it and log you in.\n\nWe do not use this permission to track you in any way!</string>
+    <string name="grant_permission">Got it</string>
     <string name="empty_wifi_name">The Wi-Fi name must not be empty!</string>
+    <string name="pref_title_auto_login_on_connect">Auto login on connect</string>
+    <string name="location_permission_required">Only works if the location permission is granted!</string>
+    <string name="reset_settings">Reset</string>
+    <string name="reset_dismissed_content">Reset dismissed requests</string>
+    <string name="dismissed_content_reset">Dismissed request were reset!</string>
 </resources>

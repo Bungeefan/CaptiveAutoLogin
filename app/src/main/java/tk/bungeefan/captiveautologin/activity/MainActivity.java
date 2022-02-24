@@ -16,6 +16,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -65,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     public static final String FILENAME_URL = UPDATE_URL + "appName.txt";
     public static final String DOWNLOAD_URL = UPDATE_URL + "download/";
     public static final String CHANNEL_ID = "default_login";
+    public static final String PREF_PERMISSION_KEY = "LOCATION_PERMISSION_EXPLANATION";
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String FILE_NAME = "wifi_data";
@@ -89,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     private Network network;
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String> importLauncher;
+    private ConnectivityManager.NetworkCallback callback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,7 +140,9 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         swipeRefresh = findViewById(R.id.swipeRefresh);
         swipeRefresh.setOnRefreshListener(() -> {
             if (!mListViewAdapter.getCurrentList().isEmpty()) {
-                checkForWifi();
+                if (checkAndRequestLocationPermission(RQ_ACCESS_FINE_LOCATION)) {
+                    checkForWifi(mWifiManager.getConnectionInfo());
+                }
             }
             swipeRefresh.setRefreshing(false);
         });
@@ -145,15 +150,13 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         recyclerView = findViewById(R.id.networkListView);
         recyclerView.setAdapter(mListViewAdapter = new LoginAdapter(loginData -> {
             if (loginData != null) {
-                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RQ_ACCESS_FINE_LOCATION);
-                } else {
-                    Consumer<Void> loginWifi = (unused) -> Util.loginWifi(this, loginData, captivePortal, network, false);
+                Consumer<Void> loginWifi = (unused) -> Util.loginWifi(this, loginData, captivePortal, network, false);
 
-                    String ssid = Util.replaceSSID(mWifiManager.getConnectionInfo().getSSID());
-                    int title = -1;
-                    String message = null;
+                String ssid = Util.replaceSSID(mWifiManager.getConnectionInfo().getSSID());
+                int title = -1;
+                String message = null;
 
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     if (!ssid.equals(loginData.getSSID())) {
                         if (!Util.isUnknownSSID(ssid)) {
                             if (prefs.getBoolean("pref_network_mismatch_warning", true)) {
@@ -165,19 +168,19 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                             message = getString(R.string.not_connected_to_network);
                         }
                     }
-
-                    if (title != -1) {
-                        new MaterialAlertDialogBuilder(this)
-                                .setTitle(getString(title))
-                                .setMessage(message)
-                                .setNegativeButton(getString(R.string.login_anyway), (dialog, which) -> loginWifi.accept(null))
-                                .setPositiveButton(android.R.string.cancel, null)
-                                .show();
-                        return;
-                    }
-
-                    loginWifi.accept(null);
                 }
+
+                if (title != -1) {
+                    new MaterialAlertDialogBuilder(this)
+                            .setTitle(getString(title))
+                            .setMessage(message)
+                            .setNegativeButton(getString(R.string.login_anyway), (dialog, which) -> loginWifi.accept(null))
+                            .setPositiveButton(android.R.string.cancel, null)
+                            .show();
+                    return;
+                }
+
+                loginWifi.accept(null);
             }
         }));
 
@@ -188,16 +191,31 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
         checkUpdate(true);
 
-        NetworkRequest.Builder builder = new NetworkRequest.Builder();
-        builder.addCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL);
-        ConnectivityManager.NetworkCallback callback = new ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onAvailable(@NonNull Network network) {
-                Log.d(TAG, "Network available, checking for wifi...");
-                checkForWifi(true);
-            }
-        };
-        mConnectivityManager.registerNetworkCallback(builder.build(), callback);
+        if (prefs.getBoolean("pref_auto_login_on_connect", true)) {
+            callback = new ConnectivityManager.NetworkCallback() {
+                @Override
+                public void onAvailable(@NonNull Network network) {
+                    WifiInfo wifiInfo;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                        wifiInfo = (WifiInfo) mConnectivityManager.getNetworkCapabilities(network).getTransportInfo();
+                    } else {
+                        wifiInfo = mWifiManager.getConnectionInfo();
+                    }
+                    checkForWifi(wifiInfo, true);
+                }
+
+                @Override
+                public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
+                    WifiInfo wifiInfo;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                        wifiInfo = (WifiInfo) networkCapabilities.getTransportInfo();
+                    } else {
+                        wifiInfo = mWifiManager.getConnectionInfo();
+                    }
+                    checkForWifi(wifiInfo, true);
+                }
+            };
+        }
 
         exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument() {
             @NonNull
@@ -268,6 +286,34 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (callback != null) {
+                NetworkRequest.Builder builder = new NetworkRequest.Builder();
+                builder.addCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL);
+                mConnectivityManager.registerNetworkCallback(builder.build(), callback);
+                Log.d(TAG, "Registered network callback");
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (callback != null) {
+                try {
+                    mConnectivityManager.unregisterNetworkCallback(callback);
+                    Log.d(TAG, "Unregistered network callback");
+                } catch (IllegalArgumentException e) {
+                    Log.w(TAG, "Error while unregistering network callback", e);
+                }
+            }
+        }
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
 
@@ -302,11 +348,17 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (grantResults.length > 0) {
-            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (requestCode == RQ_ACCESS_FINE_LOCATION) {
+                    checkForWifi(mWifiManager.getConnectionInfo());
+                } else if (requestCode == RQ_ACCESS_FINE_LOCATION_DIALOG) {
+                    showInputDialog(null);
+                }
+            } else {
                 var builder = new MaterialAlertDialogBuilder(this)
                         .setTitle(getString(R.string.permission_denied))
                         .setMessage(getString(R.string.permission_denied_description))
-                        .setPositiveButton(getString(R.string.i_understand), null);
+                        .setPositiveButton(android.R.string.ok, null);
 
                 Intent settingsIntent = new Intent()
                         .setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
@@ -317,28 +369,36 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 }
 
                 builder.show();
-            } else {
-                if (requestCode == RQ_ACCESS_FINE_LOCATION) {
-                    checkForWifi();
-                } else if (requestCode == RQ_ACCESS_FINE_LOCATION_DIALOG) {
-                    showInputDialog();
-                }
             }
         }
     }
 
-    public void checkForWifi() {
-        checkForWifi(false);
+    public void checkForWifi(WifiInfo wifiInfo) {
+        checkForWifi(wifiInfo, false);
     }
 
-    public void checkForWifi(boolean unnecessaryOutputDisabled) {
+    public void checkForWifi(WifiInfo wifiInfo, boolean unnecessaryOutputDisabled) {
+        Util.checkForWifi(this, mListViewAdapter.getCurrentList(), wifiInfo, captivePortal, network, unnecessaryOutputDisabled);
+    }
+
+    private boolean checkAndRequestLocationPermission(int requestCode) {
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            if (!unnecessaryOutputDisabled) {
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RQ_ACCESS_FINE_LOCATION);
+            boolean hasShownPermissionExplanation = prefs.getBoolean(PREF_PERMISSION_KEY, false);
+            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) || !hasShownPermissionExplanation) {
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(getString(R.string.rational_location_permission_title))
+                        .setMessage(getString(R.string.rational_location_permission_description))
+                        .setPositiveButton(getString(R.string.grant_permission), (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode))
+                        .show();
+                if (!hasShownPermissionExplanation) {
+                    prefs.edit().putBoolean(PREF_PERMISSION_KEY, true).apply();
+                }
+            } else {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode);
             }
-        } else {
-            Util.checkForWifi(this, mListViewAdapter.getCurrentList(), mWifiManager, captivePortal, network, unnecessaryOutputDisabled);
+            return false;
         }
+        return true;
     }
 
     @Override
@@ -374,11 +434,12 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     }
 
     private void showInputDialog() {
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RQ_ACCESS_FINE_LOCATION_DIALOG);
-        } else {
-            showInputDialog(null);
+        if (!prefs.getBoolean(PREF_PERMISSION_KEY, false)) {
+            if (!checkAndRequestLocationPermission(RQ_ACCESS_FINE_LOCATION_DIALOG)) {
+                return;
+            }
         }
+        showInputDialog(null);
     }
 
     private void showInputDialog(Login login) {
