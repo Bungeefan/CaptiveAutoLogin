@@ -74,10 +74,10 @@ public class LoginTask extends AsyncTask<String, String, String> {
     private URL lastUrl;
     private String requestMethod = "POST";
     private boolean failed = false;
-    private boolean unnecessaryOutputDisabled;
+    private boolean silent;
     private final int notificationId = 0;
 
-    public LoginTask(MainActivity context, Login loginData, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
+    public LoginTask(MainActivity context, Login loginData, CaptivePortal captivePortal, Network network, boolean silent) {
         if (taskRunning) {
             throw new IllegalThreadStateException("Another " + this.getClass().getSimpleName() + " is already running!");
         }
@@ -86,7 +86,7 @@ public class LoginTask extends AsyncTask<String, String, String> {
         this.loginData = loginData;
         this.captivePortal = captivePortal;
         this.network = network;
-        this.unnecessaryOutputDisabled = unnecessaryOutputDisabled;
+        this.silent = silent;
         this.mNotificationManager = NotificationManagerCompat.from(mContext.get());
         this.mConnectivityManager = context.getSystemService(ConnectivityManager.class);
         try {
@@ -172,7 +172,7 @@ public class LoginTask extends AsyncTask<String, String, String> {
                 .setContentText(mContext.get().getString(R.string.login_try))
                 .setProgress(100, 0, true)
                 .setOngoing(true);
-        if (unnecessaryOutputDisabled) {
+        if (silent) {
             builder.setPriority(NotificationCompat.PRIORITY_MIN);
         }
         mNotificationManager.notify(notificationId, builder.build());
@@ -208,7 +208,7 @@ public class LoginTask extends AsyncTask<String, String, String> {
                 }
             } else {
                 responseCode = conn.getResponseCode();
-                if (!unnecessaryOutputDisabled) {
+                if (!silent) {
                     response = mContext.get().getString(R.string.already_logged_in);
                 }
                 reportCaptivePortal(captivePortal);
@@ -264,12 +264,12 @@ public class LoginTask extends AsyncTask<String, String, String> {
                 pendingIntent = PendingIntent.getActivity(mContext.get(), 0, new Intent(), PendingIntent.FLAG_CANCEL_CURRENT);
             }
             builder.setContentIntent(pendingIntent);
-            if (unnecessaryOutputDisabled) {
+            if (silent) {
                 builder.setPriority(NotificationCompat.PRIORITY_MIN);
             }
             mNotificationManager.notify(notificationId, builder.build());
         }
-        if (failed && !unnecessaryOutputDisabled) {
+        if (failed && !silent) {
             mContext.get().loginFailed(captivePortal, loginData, response, lastUrl.toString());
         }
 
@@ -279,8 +279,8 @@ public class LoginTask extends AsyncTask<String, String, String> {
         Log.d(TAG, this.getClass().getSimpleName() + " (" + loginData.getSSID() + ") finished!");
     }
 
-    public LoginTask disableUnnecessaryOutput() {
-        unnecessaryOutputDisabled = true;
+    public LoginTask setSilent() {
+        silent = true;
         return this;
     }
 

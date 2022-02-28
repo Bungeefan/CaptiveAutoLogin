@@ -32,11 +32,11 @@ public class Util {
         return ssid.replace("\"", "");
     }
 
-    public static void checkForWifi(MainActivity ctx, List<Login> list, WifiInfo wifiInfo, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
+    public static void checkForWifi(MainActivity ctx, List<Login> list, WifiInfo wifiInfo, CaptivePortal captivePortal, Network network, boolean silent) {
         String ssid = replaceSSID(wifiInfo.getSSID());
         if (!isUnknownSSID(ssid)) {
             list.stream().filter(login -> login.getSSID().equals(ssid))
-                    .forEach(login -> loginWifi(ctx, login, captivePortal, network, unnecessaryOutputDisabled));
+                    .forEach(login -> loginWifi(ctx, login, captivePortal, network, silent));
         }
     }
 
@@ -44,12 +44,12 @@ public class Util {
         return ssid.equals(WifiManager.UNKNOWN_SSID);
     }
 
-    public static void loginWifi(MainActivity ctx, Login login, CaptivePortal captivePortal, Network network, boolean unnecessaryOutputDisabled) {
+    public static void loginWifi(MainActivity ctx, Login login, CaptivePortal captivePortal, Network network, boolean silent) {
         if (!LoginTask.taskRunning) {
-            new LoginTask(ctx, login, captivePortal, network, unnecessaryOutputDisabled).execute();
+            new LoginTask(ctx, login, captivePortal, network, silent).execute();
         } else {
             Log.d(TAG, "LoginTask already running!");
-            if (!unnecessaryOutputDisabled) {
+            if (!silent) {
                 Toast.makeText(ctx, ctx.getString(R.string.login_already_in_progress), Toast.LENGTH_SHORT).show();
             }
         }

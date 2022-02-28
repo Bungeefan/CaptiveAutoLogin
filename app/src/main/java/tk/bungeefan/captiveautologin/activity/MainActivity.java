@@ -491,8 +491,8 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         checkForWifi(wifiInfo, false);
     }
 
-    public void checkForWifi(WifiInfo wifiInfo, boolean unnecessaryOutputDisabled) {
-        Util.checkForWifi(this, mListViewAdapter.getCurrentList(), wifiInfo, captivePortal, network, unnecessaryOutputDisabled);
+    public void checkForWifi(WifiInfo wifiInfo, boolean silent) {
+        Util.checkForWifi(this, mListViewAdapter.getCurrentList(), wifiInfo, captivePortal, network, silent);
     }
 
     private boolean checkAndRequestLocationPermission(int requestCode) {
