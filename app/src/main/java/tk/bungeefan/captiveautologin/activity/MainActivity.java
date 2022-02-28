@@ -403,7 +403,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                             }
                             return;
                         } catch (PackageManager.NameNotFoundException e) {
-                            Log.e(TAG, Log.getStackTraceString(e));
+                            Log.e(TAG, "Failed to retrieve version info", e);
                         }
                     }
 
@@ -589,7 +589,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                     .setPositiveButton(android.R.string.ok, null)
                     .show();
         } catch (IOException e) {
-            Log.e(TAG, Log.getStackTraceString(e));
+            Log.e(TAG, "Failed to export data", e);
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.error_title)
                     .setMessage(getString(R.string.data_export_failed, name))
@@ -631,7 +631,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                         .show();
             }
         } catch (IOException e) {
-            Log.e(TAG, Log.getStackTraceString(e));
+            Log.e(TAG, "Failed to import data", e);
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.error_title)
                     .setMessage(getString(R.string.data_import_failed, name))
@@ -693,14 +693,14 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                                     .putExtra(ConnectivityManager.EXTRA_NETWORK, network);
                             startActivity(intent);
                         } catch (ActivityNotFoundException e) {
-                            Log.e(TAG, Log.getStackTraceString(e));
+                            Log.w(TAG, "Unable to launch system app for captive portals", e);
                             Intent browserIntent = new Intent(this, WebViewActivity.class);
                             browserIntent.putExtra(WebViewActivity.URL_EXTRA, url);
                             browserIntent.putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL, captivePortal);
                             startActivity(browserIntent);
                         }
                     } catch (ActivityNotFoundException e) {
-                        Log.e(TAG, Log.getStackTraceString(e));
+                        Log.e(TAG, "Unable to launch web-view activity", e);
                         new MaterialAlertDialogBuilder(this)
                                 .setTitle(getString(R.string.error_title))
                                 .setMessage(getString(R.string.no_url_activity, url))
