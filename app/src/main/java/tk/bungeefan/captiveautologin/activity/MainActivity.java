@@ -1,13 +1,14 @@
 package tk.bungeefan.captiveautologin.activity;
 
-import static android.net.ConnectivityManager.ACTION_CAPTIVE_PORTAL_SIGN_IN;
-
 import android.Manifest;
+import android.app.DownloadManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.CaptivePortal;
@@ -26,11 +27,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.SearchView;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.pm.PackageInfoCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
@@ -46,17 +49,18 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import tk.bungeefan.captiveautologin.ILoginFailed;
 import tk.bungeefan.captiveautologin.R;
+import tk.bungeefan.captiveautologin.Updater;
 import tk.bungeefan.captiveautologin.Util;
 import tk.bungeefan.captiveautologin.activity.fragment.AddWifiDialogFragment;
 import tk.bungeefan.captiveautologin.activity.fragment.WifiDetailsFragment;
 import tk.bungeefan.captiveautologin.data.LoginAdapter;
 import tk.bungeefan.captiveautologin.data.LoginViewModel;
 import tk.bungeefan.captiveautologin.data.entity.Login;
-import tk.bungeefan.captiveautologin.task.CheckUpdateTask;
 import tk.bungeefan.captiveautologin.task.LoginTask;
 
 public class MainActivity extends AppCompatActivity implements ILoginFailed {
@@ -328,12 +332,81 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         savedInstanceState.putParcelable(ConnectivityManager.EXTRA_NETWORK, network);
     }
 
-    private void checkUpdate(boolean unnecessaryOutputDisabled) {
-        if (!CheckUpdateTask.taskRunning) {
-            new CheckUpdateTask(this, unnecessaryOutputDisabled).execute();
-        } else {
-            Log.d(TAG, CheckUpdateTask.class.getSimpleName() + " already running!");
-        }
+    private void checkUpdate(boolean silent) {
+        mDisposable.add(Observable.fromCallable(() -> Updater.getLatestVersion(MainActivity.VERSION_URL))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(latestVersion -> {
+                    if (latestVersion != -1) {
+                        try {
+                            long currentVersion = PackageInfoCompat.getLongVersionCode(getPackageManager().getPackageInfo(getPackageName(), 0));
+
+                            if (latestVersion > currentVersion) {
+                                Log.d(TAG, "Update available, latest: " + latestVersion + ", current: " + currentVersion);
+                                Snackbar snackbar = Snackbar.make(findViewById(R.id.content),
+                                        getString(R.string.new_version_available, latestVersion), 10000);
+                                TextView snackBarActionTextView = snackbar.getView().findViewById(R.id.snackbar_action);
+                                snackBarActionTextView.setTextSize(16);
+                                snackbar.setAction(R.string.new_version_action, v -> {
+                                    Log.d(TAG, "Downloading update (" + latestVersion + ")");
+                                    Snackbar.make(findViewById(R.id.content), getString(R.string.downloading_update), Snackbar.LENGTH_LONG).show();
+
+                                    mDisposable.add(Observable.fromCallable(() -> Updater.getUpdateFileName(MainActivity.FILENAME_URL))
+                                            .subscribeOn(Schedulers.io())
+                                            .observeOn(AndroidSchedulers.mainThread())
+                                            .subscribe(fileName -> downloadUpdate(MainActivity.DOWNLOAD_URL + fileName + ".apk"),
+                                                    throwable -> {
+                                                        Log.e(TAG, "Error while downloading update file name");
+                                                        Snackbar.make(findViewById(R.id.content), getString(R.string.update_failed), Snackbar.LENGTH_SHORT).show();
+                                                    })
+                                    );
+                                }).show();
+                            } else if (!silent) {
+                                Snackbar.make(findViewById(R.id.content), getString(R.string.version_up_to_date), Snackbar.LENGTH_SHORT).show();
+                            }
+                            return;
+                        } catch (PackageManager.NameNotFoundException e) {
+                            Log.e(TAG, Log.getStackTraceString(e));
+                        }
+                    }
+
+                    Snackbar.make(findViewById(R.id.content), getString(R.string.update_check_failed), Snackbar.LENGTH_SHORT).show();
+                }, throwable -> {
+                    Log.e(TAG, "Update Check failed", throwable);
+                    Snackbar.make(findViewById(R.id.content), getString(R.string.update_check_failed), Snackbar.LENGTH_SHORT).show();
+                })
+        );
+    }
+
+    private void downloadUpdate(String uri) {
+        var mDownloadManager = getSystemService(DownloadManager.class);
+
+        BroadcastReceiver onComplete = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context ctx, Intent intent) {
+                long downloadId = intent.getExtras().getLong(DownloadManager.EXTRA_DOWNLOAD_ID);
+
+                ctx.unregisterReceiver(this);
+                try (var fileDescriptor = mDownloadManager.openDownloadedFile(downloadId);
+                     var in = new BufferedInputStream(new FileInputStream(fileDescriptor.getFileDescriptor()))) {
+                    Snackbar.make(findViewById(R.id.content), ctx.getString(R.string.installing_new_update), Snackbar.LENGTH_SHORT).show();
+
+                    Log.d(TAG, "Installing update");
+                    Updater.installPackage(ctx, ctx.getPackageName(), in, fileDescriptor.getStatSize());
+//                    Updater.launchInstaller(ctx, mDownloadManager.getUriForDownloadedFile(downloadId), mDownloadManager.getMimeTypeForDownloadedFile(downloadId));
+                } catch (IOException e) {
+                    Log.e(TAG, "Failed to install update", e);
+                    Snackbar.make(findViewById(R.id.content), ctx.getString(R.string.update_failed), Snackbar.LENGTH_SHORT).show();
+                }
+            }
+        };
+        registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(uri))
+                .setTitle(getString(R.string.app_name))
+                .setDescription(getString(R.string.downloading_update))
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+        mDownloadManager.enqueue(request);
     }
 
     private void createNotificationChannel() {
@@ -577,7 +650,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 .setPositiveButton(getString(R.string.login_manually), (dialog, which) -> {
                     try {
                         try {
-                            Intent intent = new Intent(ACTION_CAPTIVE_PORTAL_SIGN_IN)
+                            Intent intent = new Intent(ConnectivityManager.ACTION_CAPTIVE_PORTAL_SIGN_IN)
                                     .setPackage("com.android.captiveportallogin")
                                     .putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL, captivePortal)
                                     .putExtra(ConnectivityManager.EXTRA_NETWORK, network);
