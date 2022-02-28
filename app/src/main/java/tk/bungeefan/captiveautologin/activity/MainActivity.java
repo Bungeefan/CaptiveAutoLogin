@@ -44,13 +44,18 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.List;
 import java.util.function.Consumer;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.exceptions.UndeliverableException;
+import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import tk.bungeefan.captiveautologin.ILoginFailed;
 import tk.bungeefan.captiveautologin.R;
@@ -103,6 +108,8 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        initErrorHandler();
 
         mLoginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
@@ -286,6 +293,35 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                         )
                 );
             }
+        });
+    }
+
+    private void initErrorHandler() {
+        RxJavaPlugins.setErrorHandler(e -> {
+            if (e instanceof UndeliverableException) {
+                e = e.getCause();
+            }
+            if ((e instanceof IOException) || (e instanceof SocketException)) {
+                // fine, irrelevant network problem or API that throws on cancellation
+                return;
+            }
+            if (e instanceof InterruptedException) {
+                // fine, some blocking code was interrupted by a dispose call
+                return;
+            }
+            if ((e instanceof NullPointerException) || (e instanceof IllegalArgumentException)) {
+                // that's likely a bug in the application
+                Thread.currentThread().getUncaughtExceptionHandler()
+                        .uncaughtException(Thread.currentThread(), e);
+                return;
+            }
+            if (e instanceof IllegalStateException) {
+                // that's a bug in RxJava or in a custom operator
+                Thread.currentThread().getUncaughtExceptionHandler()
+                        .uncaughtException(Thread.currentThread(), e);
+                return;
+            }
+            Log.w("Undeliverable exception received, not sure what to do", e);
         });
     }
 
