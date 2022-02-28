@@ -78,7 +78,7 @@ public class Util {
         return response;
     }
 
-    public static List<Login> readData(Context ctx, String TAG, Uri uri) throws IOException {
+    public static List<Login> readData(Context ctx, Uri uri) throws IOException {
         List<Login> dataList = new ArrayList<>();
         InputStream inputStream = uri == null ? ctx.openFileInput(MainActivity.FULL_FILE_NAME) : ctx.getContentResolver().openInputStream(uri);
         try (BufferedReader in = new BufferedReader(new InputStreamReader(inputStream))) {

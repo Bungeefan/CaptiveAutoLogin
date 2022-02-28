@@ -602,7 +602,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
         String name = DocumentFile.fromSingleUri(this, uri).getName();
         try {
-            List<Login> importedDataList = Util.readData(this, TAG, uri);
+            List<Login> importedDataList = Util.readData(this, uri);
             if (!importedDataList.isEmpty()) {
                 mDisposable.add(mLoginViewModel.getDatabase().loginDao().insertAll(importedDataList)
                         .observeOn(AndroidSchedulers.mainThread())
