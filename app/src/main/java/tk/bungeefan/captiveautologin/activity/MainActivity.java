@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     private ConnectivityManager mConnectivityManager;
 
     private CaptivePortal captivePortal;
+    private String captivePortalUrl;
     private Network network;
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String> importLauncher;
@@ -120,9 +121,11 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
         Intent intent = getIntent();
         this.captivePortal = intent.getParcelableExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL);
+        this.captivePortalUrl = intent.getStringExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL);
         this.network = intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK);
         if (captivePortal == null && savedInstanceState != null) {
             this.captivePortal = savedInstanceState.getParcelable(ConnectivityManager.EXTRA_CAPTIVE_PORTAL);
+            this.captivePortal = savedInstanceState.getParcelable(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL);
             this.network = savedInstanceState.getParcelable(ConnectivityManager.EXTRA_NETWORK);
         }
 
@@ -366,6 +369,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     protected void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putParcelable(ConnectivityManager.EXTRA_CAPTIVE_PORTAL, captivePortal);
+        savedInstanceState.putString(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL, captivePortalUrl);
         savedInstanceState.putParcelable(ConnectivityManager.EXTRA_NETWORK, network);
     }
 
@@ -690,6 +694,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                             Intent intent = new Intent(ConnectivityManager.ACTION_CAPTIVE_PORTAL_SIGN_IN)
                                     .setPackage("com.android.captiveportallogin")
                                     .putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL, captivePortal)
+                                    .putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL, captivePortalUrl)
                                     .putExtra(ConnectivityManager.EXTRA_NETWORK, network);
                             startActivity(intent);
                         } catch (ActivityNotFoundException e) {
@@ -697,6 +702,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                             Intent browserIntent = new Intent(this, WebViewActivity.class);
                             browserIntent.putExtra(WebViewActivity.URL_EXTRA, url);
                             browserIntent.putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL, captivePortal);
+                            browserIntent.putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL, captivePortalUrl);
                             startActivity(browserIntent);
                         }
                     } catch (ActivityNotFoundException e) {
