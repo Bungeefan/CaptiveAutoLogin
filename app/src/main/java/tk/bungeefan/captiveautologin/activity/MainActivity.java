@@ -19,6 +19,7 @@ import android.net.NetworkRequest;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -207,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 @Override
                 public void onAvailable(@NonNull Network network) {
                     WifiInfo wifiInfo;
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         wifiInfo = (WifiInfo) mConnectivityManager.getNetworkCapabilities(network).getTransportInfo();
                     } else {
                         wifiInfo = mWifiManager.getConnectionInfo();
@@ -218,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 @Override
                 public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
                     WifiInfo wifiInfo;
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         wifiInfo = (WifiInfo) networkCapabilities.getTransportInfo();
                     } else {
                         wifiInfo = mWifiManager.getConnectionInfo();
@@ -656,7 +657,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 new MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.warning)
                         .setMessage(getString(R.string.removing_wifi, loginData.getSSID()))
-                        .setPositiveButton(android.R.string.yes, (dialog, which) ->
+                        .setPositiveButton(android.R.string.ok, (dialog, which) ->
                                 mDisposable.add(mLoginViewModel.getDatabase().loginDao().delete(loginData)
                                         .subscribeOn(Schedulers.io())
                                         .observeOn(AndroidSchedulers.mainThread())
