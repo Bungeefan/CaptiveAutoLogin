@@ -33,12 +33,14 @@
     <string name="not_connected_to_network">You are currently not connected to a network!</string>
     <string name="another_network">Your currently connected network (%s) isn\'t the same as you selected (%s)!</string>
     <string name="no_url_activity">Couldn\'t open the url \"%s\" on your phone!</string>
-    <string name="new_version_available">New Update (Version: %d) available!</string>
+    <string name="new_version_available">Update available! (Version: %d)</string>
     <string name="new_version_action">Update</string>
     <string name="update_check_failed">Update Check failed!</string>
     <string name="version_up_to_date">Your Version is up to date!</string>
     <string name="installing_new_update">Started installation…</string>
     <string name="downloading_update">Downloading Update…</string>
+    <string name="update_failed">Update failed!</string>
+    <string name="update_canceled">Update canceled</string>
     <string name="login_try">Trying to login!</string>
     <string name="login_in_progress">(%s) Login in progress!</string>
     <string name="logged_in_successfully">Logged in successfully</string>

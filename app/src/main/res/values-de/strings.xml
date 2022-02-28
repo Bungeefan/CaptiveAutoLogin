@@ -23,6 +23,8 @@
     <string name="failed_with_http_code">Fehlgeschlagen mit dem HTTP Code: "%d"</string>
     <string name="new_version_action">Update</string>
     <string name="installing_new_update">Installation gestartet…</string>
+    <string name="update_canceled">Update abgebrochen</string>
+    <string name="update_failed">Update fehlgeschlagen!</string>
     <string name="logged_in_successfully">Erfolgreich eingeloggt!</string>
     <string name="login_already_in_progress">Login bereits in Arbeit!</string>
     <string name="login_anyway">Ich verstehe, trotzdem einloggen</string>
@@ -33,7 +35,7 @@
     <string name="login_notification_channel_description">Benachrichtigt dich über den Login Prozess</string>
     <string name="login_successful">Login erfolgreich</string>
     <string name="login_try">Versuche einzuloggen!</string>
-    <string name="new_version_available">Neues Update (Version: %d) verfügbar!</string>
+    <string name="new_version_available">"Update verfügbar! (Version: %d) "</string>
     <string name="no_saved_password">Kein gespeichertes Passwort</string>
     <string name="no_url_activity">Konnte die URL %s auf deinem Handy nicht öffnen!</string>
     <string name="no_network_detected">Es konnte kein Netzwerk erkannt werden!</string>
