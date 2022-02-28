@@ -215,7 +215,7 @@ public class LoginTask extends AsyncTask<String, String, String> {
             }
             conn.disconnect();
         } catch (Exception e) {
-            Log.e(TAG, Log.getStackTraceString(e));
+            Log.e(TAG, "Error while logging in", e);
             response = mContext.get().getString(R.string.failed_with_error, e.getMessage());
             failed = true;
         }
