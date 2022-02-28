@@ -9,6 +9,8 @@ import android.net.wifi.WifiManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -32,11 +34,13 @@ public class Util {
         return ssid.replace("\"", "");
     }
 
-    public static void checkForWifi(MainActivity ctx, List<Login> list, WifiInfo wifiInfo, CaptivePortal captivePortal, Network network, boolean silent) {
-        String ssid = replaceSSID(wifiInfo.getSSID());
-        if (!isUnknownSSID(ssid)) {
-            list.stream().filter(login -> login.getSSID().equals(ssid))
-                    .forEach(login -> loginWifi(ctx, login, captivePortal, network, silent));
+    public static void checkForWifi(MainActivity ctx, List<Login> list, @Nullable WifiInfo wifiInfo, CaptivePortal captivePortal, Network network, boolean silent) {
+        if (wifiInfo != null) {
+            String ssid = replaceSSID(wifiInfo.getSSID());
+            if (!isUnknownSSID(ssid)) {
+                list.stream().filter(login -> login.getSSID().equals(ssid))
+                        .forEach(login -> loginWifi(ctx, login, captivePortal, network, silent));
+            }
         }
     }
 
