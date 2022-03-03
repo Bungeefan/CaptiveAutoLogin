@@ -204,7 +204,9 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
         createNotificationChannel();
 
-        checkUpdate(true);
+        if (prefs.getBoolean("pref_auto_update_check", true)) {
+            checkUpdate(true);
+        }
 
         if (prefs.getBoolean("pref_auto_login_on_connect", true)) {
             callback = new ConnectivityManager.NetworkCallback() {
