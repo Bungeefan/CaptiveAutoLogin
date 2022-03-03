@@ -74,7 +74,7 @@
     <string name="rational_location_permission_description">The app is capable to function without the location permission, but you will miss some great convenient features!\nWith this permission we are able to provide you with a list of networks known to your device, we are also able to automatically detect a known captive portal when you connect to it and log you in.\n\nWe do not use this permission to track you in any way!</string>
     <string name="grant_permission">Got it</string>
     <string name="empty_wifi_name">The Wi-Fi name must not be empty!</string>
-    <string name="pref_title_auto_login_on_connect">Auto login on connect</string>
+    <string name="pref_title_auto_login_on_network_connection">Auto login on network connection</string>
     <string name="location_permission_required">Only works if the location permission is granted!</string>
     <string name="reset_settings">Reset</string>
     <string name="reset_dismissed_content">Reset dismissed requests</string>

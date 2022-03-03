@@ -75,7 +75,7 @@
     <string name="rational_location_permission_description">Die App ist in der Lage komplett ohne diese Berechtigung zu funktionieren, aber Sie verpassen dadurch eine Reihe an hilfreichen Features!\nMit dieser Berechtigung sind wir in der Lage Ihnen eine Auswahl an ihrem Gerät bekannten Netzwerken zu bieten und Ihnen somit die Eingabe zu erleichtern, außerdem werden Sie automatisch eingeloggt, sobald eine Verbindung mit einem bekanntem Captive Portal hergestellt wird.\n\nWir benutzen diese Berechtigung nicht, um Sie in irgendeiner Weise zu tracken!</string>
     <string name="grant_permission">Verstanden</string>
     <string name="empty_wifi_name">Der Wi-Fi Name darf nicht leer sein!</string>
-    <string name="pref_title_auto_login_on_connect">Automatische Anmeldung beim Verbinden</string>
+    <string name="pref_title_auto_login_on_network_connection">Automatische Anmeldung bei Netzwerkverbindung</string>
     <string name="location_permission_required">Funktioniert nur, wenn die Standort-Berechtigung erteilt wurde!</string>
     <string name="reset_settings">Zurücksetzen</string>
     <string name="reset_dismissed_content">Abgelehnte  Dialogfenster zurücksetzen</string>
