@@ -80,4 +80,5 @@
     <string name="reset_settings">Zurücksetzen</string>
     <string name="reset_dismissed_content">Abgelehnte  Dialogfenster zurücksetzen</string>
     <string name="dismissed_content_reset">Abgelehnte Dialogfenster wurden zurückgesetzt</string>
+    <string name="pref_title_auto_update_check">Automatische Update Überprüfung</string>
 </resources>

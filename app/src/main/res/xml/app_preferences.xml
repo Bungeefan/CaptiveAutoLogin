@@ -4,6 +4,11 @@
 
     <PreferenceCategory android:title="@string/general_settings">
 
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="pref_auto_update_check"
+            android:title="@string/pref_title_auto_update_check" />
+
         <ListPreference
             android:defaultValue="-1"
             android:entries="@array/themeSettings"
