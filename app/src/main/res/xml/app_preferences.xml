@@ -16,7 +16,7 @@
             android:defaultValue="true"
             android:key="pref_auto_login_on_connect"
             android:summary="@string/location_permission_required"
-            android:title="@string/pref_title_auto_login_on_connect" />
+            android:title="@string/pref_title_auto_login_on_network_connection" />
 
         <SwitchPreference
             android:defaultValue="true"
