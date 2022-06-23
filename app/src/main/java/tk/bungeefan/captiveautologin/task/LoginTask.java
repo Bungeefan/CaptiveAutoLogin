@@ -5,49 +5,27 @@ import android.content.Intent;
 import android.net.CaptivePortal;
 import android.net.ConnectivityManager;
 import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.lifecycle.ViewModelProvider;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import tk.bungeefan.captiveautologin.LoginUtil;
 import tk.bungeefan.captiveautologin.R;
 import tk.bungeefan.captiveautologin.Util;
 import tk.bungeefan.captiveautologin.activity.MainActivity;
@@ -72,7 +50,7 @@ public class LoginTask extends AsyncTask<String, String, String> {
     private final WeakReference<MainActivity> mContext;
     private final LoginViewModel mLoginViewModel;
     private URL lastUrl;
-    private String requestMethod = "POST";
+    private final String requestMethod = "POST";
     private boolean failed = false;
     private boolean silent;
     private final int notificationId = 0;
@@ -93,34 +71,6 @@ public class LoginTask extends AsyncTask<String, String, String> {
             this.lastUrl = new URL(URL_DETECT_PORTAL);
         } catch (MalformedURLException e) {
             Log.e(TAG, Log.getStackTraceString(e));
-        }
-    }
-
-    public static void bindNetwork(ConnectivityManager mConnectivityManager, @Nullable Network network) {
-        if (mConnectivityManager != null) {
-            if (network == null) {
-                NetworkRequest.Builder request = new NetworkRequest.Builder();
-//                request.addCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL);
-                request.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-                mConnectivityManager.requestNetwork(request.build(), new ConnectivityManager.NetworkCallback() {
-                    @Override
-                    public void onAvailable(@NonNull Network availableNetwork) {
-                        try {
-                            mConnectivityManager.bindProcessToNetwork(availableNetwork);
-                        } catch (IllegalStateException e) {
-                            Log.e(TAG, "ConnectivityManager.NetworkCallback.onAvailable: ", e);
-                        }
-                    }
-                });
-            } else {
-                mConnectivityManager.bindProcessToNetwork(network);
-            }
-        }
-    }
-
-    public static void reportCaptivePortal(CaptivePortal captivePortal) {
-        if (captivePortal != null) {
-            captivePortal.reportCaptivePortalDismissed();
         }
     }
 
@@ -176,7 +126,7 @@ public class LoginTask extends AsyncTask<String, String, String> {
             builder.setPriority(NotificationCompat.PRIORITY_MIN);
         }
         mNotificationManager.notify(notificationId, builder.build());
-        bindNetwork(mConnectivityManager, network);
+        LoginUtil.bindNetwork(mConnectivityManager, network);
     }
 
     @Override
@@ -184,12 +134,12 @@ public class LoginTask extends AsyncTask<String, String, String> {
         int responseCode = -1;
         String response = null;
         try {
-            TrustAllCertificates.install();
+            LoginUtil.TrustAllCertificates.install();
             HttpURLConnection conn = createConnection(lastUrl, true);
             String responseS = Util.readResponse(TAG, conn);
-            if (checkCaptivePortal(responseS)) {
+            if (LoginUtil.checkCaptivePortal(responseS)) {
                 Log.d(TAG, "CaptivePortal detected");
-                String formParams = getFormParams(responseS);
+                String formParams = LoginUtil.getFormParams(loginData.getUsername(), loginData.getPassword(), lastUrl, requestMethod, responseS);
                 conn = createConnection(lastUrl);
                 conn.setRequestMethod(requestMethod);
                 conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -202,16 +152,16 @@ public class LoginTask extends AsyncTask<String, String, String> {
                 //Check if success
                 conn = createConnection(new URL(URL_DETECT_PORTAL), true);
                 responseCode = conn.getResponseCode();
-                if (!checkCaptivePortal(Util.readResponse(TAG, conn))) {
+                if (!LoginUtil.checkCaptivePortal(Util.readResponse(TAG, conn))) {
                     response = mContext.get().getString(R.string.logged_in_successfully);
-                    reportCaptivePortal(captivePortal);
+                    LoginUtil.reportCaptivePortal(captivePortal);
                 }
             } else {
                 responseCode = conn.getResponseCode();
                 if (!silent) {
                     response = mContext.get().getString(R.string.already_logged_in);
                 }
-                reportCaptivePortal(captivePortal);
+                LoginUtil.reportCaptivePortal(captivePortal);
             }
             conn.disconnect();
         } catch (Exception e) {
@@ -282,106 +232,6 @@ public class LoginTask extends AsyncTask<String, String, String> {
     public LoginTask setSilent() {
         silent = true;
         return this;
-    }
-
-    private boolean checkCaptivePortal(String responseText) {
-        return responseText != null && !responseText.equals("success");
-    }
-
-    @NonNull
-    private String getFormParams(String html) throws UnsupportedEncodingException {
-        String username = loginData.getUsername();
-        String password = loginData.getPassword();
-
-        Document doc = Jsoup.parse(html);
-
-        Map<String, String> params = new HashMap<>();
-        Elements forms = doc.getElementsByTag("form");
-        for (Element e : forms) {
-            if (e.hasAttr("action") && !e.attr("action").isEmpty()) {
-                try {
-                    lastUrl = new URL(lastUrl, e.attr("action"));
-                    Log.d(TAG, "Changed url to (" + lastUrl + ") cause of form action attribute!");
-                } catch (MalformedURLException e1) {
-                    Log.e(TAG, Log.getStackTraceString(e1));
-                }
-            }
-            if (e.hasAttr("method") && !e.attr("method").isEmpty()) {
-                String method = e.attr("method").toUpperCase();
-                if (!requestMethod.equals(method)) {
-                    requestMethod = method;
-                    Log.d(TAG, "Changed request method to " + requestMethod);
-                }
-            }
-        }
-
-        Elements inputElements = doc.getElementsByTag("input");
-        for (Element inputElement : inputElements) {
-            String name = inputElement.attr("name");
-            if (!name.isEmpty()) {
-                String type = inputElement.attr("type");
-                String value = inputElement.val();
-
-                //Checkboxes are only submitted when checked but here it always gets submitted
-                if (!type.equalsIgnoreCase("hidden")) {
-                    if (name.toLowerCase().contains("username") || name.toLowerCase().contains("auth_user") || name.toLowerCase().contains("uname") || type.equalsIgnoreCase("text") || type.equalsIgnoreCase("email")) {
-                        value = username;
-                    } else if (name.toLowerCase().contains("password") || name.toLowerCase().contains("psw") || type.equalsIgnoreCase("password")) {
-                        value = password;
-                    }
-                }
-                Log.d(TAG, "Added input: " + inputElement);
-                params.put(name, value);
-            }
-        }
-
-        StringBuilder result = new StringBuilder();
-        for (Map.Entry<String, String> param : params.entrySet()) {
-            if (result.length() != 0) {
-                result.append('&');
-            }
-            result.append(URLEncoder.encode(param.getKey(), "UTF-8"));
-            result.append('=');
-            result.append(URLEncoder.encode(param.getValue(), "UTF-8"));
-        }
-        return result.toString();
-    }
-
-    public static final class TrustAllCertificates implements X509TrustManager, HostnameVerifier {
-        /**
-         * Installs a new {@link TrustAllCertificates} as trust manager and hostname verifier.
-         */
-        public static void install() {
-            try {
-                TrustAllCertificates trustAll = new TrustAllCertificates();
-
-                // Install the all-trusting trust manager
-                SSLContext sc = SSLContext.getInstance("SSL");
-                sc.init(null,
-                        new TrustManager[]{trustAll},
-                        new java.security.SecureRandom());
-                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-
-                // Install the all-trusting host verifier
-                HttpsURLConnection.setDefaultHostnameVerifier(trustAll);
-            } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                throw new RuntimeException("Failed setting up all thrusting certificate manager.", e);
-            }
-        }
-
-        public X509Certificate[] getAcceptedIssuers() {
-            return null;
-        }
-
-        public void checkClientTrusted(X509Certificate[] certs, String authType) {
-        }
-
-        public void checkServerTrusted(X509Certificate[] certs, String authType) {
-        }
-
-        public boolean verify(String hostname, SSLSession session) {
-            return true;
-        }
     }
 
 }
