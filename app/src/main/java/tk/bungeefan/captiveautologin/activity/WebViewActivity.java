@@ -11,8 +11,8 @@ import android.webkit.WebViewClient;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import tk.bungeefan.captiveautologin.LoginUtil;
 import tk.bungeefan.captiveautologin.R;
-import tk.bungeefan.captiveautologin.task.LoginTask;
 
 public class WebViewActivity extends AppCompatActivity {
 
@@ -44,7 +44,7 @@ public class WebViewActivity extends AppCompatActivity {
 
             @Override
             public void onPageFinished(WebView view, String url) {
-                LoginTask.reportCaptivePortal(captivePortal);
+                LoginUtil.reportCaptivePortal(captivePortal);
             }
         });
 
@@ -58,7 +58,7 @@ public class WebViewActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        LoginTask.bindNetwork(mConnectivityManager, null);
+        LoginUtil.bindNetwork(mConnectivityManager, null);
 
         getSupportActionBar().setTitle("Loading...");
         webView.loadUrl(startUrl);
