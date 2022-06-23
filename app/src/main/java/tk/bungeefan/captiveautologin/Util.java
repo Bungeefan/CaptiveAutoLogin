@@ -33,6 +33,9 @@ public class Util {
 
     private static final String TAG = Util.class.getSimpleName();
 
+    public static final String GITHUB = "https://github.com/Bungeefan/CaptiveAutoLogin";
+    public static final String USER_AGENT = "Mozilla/5.0 (Android; CaptiveAutoLogin (" + GITHUB + "))";
+
     public static String replaceSSID(String ssid) {
         return ssid.replace("\"", "");
     }
