@@ -133,7 +133,7 @@ public class LoginTask extends AsyncTask<String, String, String> {
         HttpURLConnection conn = (HttpURLConnection) connectUrl.openConnection();
         conn.setInstanceFollowRedirects(withRedirects);
         Log.d(TAG, "Created connection to " + connectUrl);
-        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android;CaptiveLogin)");
+        conn.setRequestProperty("User-Agent", Util.USER_AGENT);
         conn.setUseCaches(false);
 
         if (withRedirects) {
