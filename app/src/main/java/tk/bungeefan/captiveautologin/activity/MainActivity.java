@@ -34,7 +34,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.pm.PackageInfoCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
@@ -382,7 +381,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 .subscribe(latestVersion -> {
                     if (latestVersion != -1) {
                         try {
-                            long currentVersion = PackageInfoCompat.getLongVersionCode(getPackageManager().getPackageInfo(getPackageName(), 0));
+                            long currentVersion = Util.getVersionCode(this);
 
                             if (latestVersion > currentVersion) {
                                 Log.d(TAG, "Update available, latest: " + latestVersion + ", current: " + currentVersion);

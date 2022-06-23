@@ -1,6 +1,7 @@
 package tk.bungeefan.captiveautologin;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.CaptivePortal;
 import android.net.Network;
 import android.net.Uri;
@@ -10,6 +11,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.core.content.pm.PackageInfoCompat;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -28,6 +30,7 @@ import tk.bungeefan.captiveautologin.data.entity.Login;
 import tk.bungeefan.captiveautologin.task.LoginTask;
 
 public class Util {
+
     private static final String TAG = Util.class.getSimpleName();
 
     public static String replaceSSID(String ssid) {
@@ -114,5 +117,9 @@ public class Util {
         try (PrintWriter out = new PrintWriter(new OutputStreamWriter(outputStream))) {
             dataList.forEach(login -> out.println(login.toCSVString()));
         }
+    }
+
+    public static long getVersionCode(Context context) throws PackageManager.NameNotFoundException {
+        return PackageInfoCompat.getLongVersionCode(context.getPackageManager().getPackageInfo(context.getPackageName(), 0));
     }
 }
