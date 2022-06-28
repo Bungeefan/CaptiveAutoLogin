@@ -35,23 +35,23 @@ public class WebViewActivity extends AppCompatActivity {
 
         webView = findViewById(R.id.webView);
         webView.getSettings().setJavaScriptEnabled(true);
+
+        SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefresh);
+        swipeRefresh.setOnRefreshListener(() -> webView.reload());
+
         webView.setWebViewClient(new WebViewClient() {
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                getSupportActionBar().setTitle(url);
+                getSupportActionBar().setSubtitle(url);
+                swipeRefresh.setRefreshing(true);
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 LoginUtil.reportCaptivePortal(captivePortal);
+                swipeRefresh.setRefreshing(false);
             }
-        });
-
-        SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefresh);
-        swipeRefresh.setOnRefreshListener(() -> {
-            webView.reload();
-            swipeRefresh.setRefreshing(false);
         });
     }
 
@@ -60,7 +60,7 @@ public class WebViewActivity extends AppCompatActivity {
         super.onStart();
         LoginUtil.bindNetwork(mConnectivityManager, null);
 
-        getSupportActionBar().setTitle("Loading...");
+        getSupportActionBar().setSubtitle("Loading...");
         webView.loadUrl(startUrl);
     }
 
