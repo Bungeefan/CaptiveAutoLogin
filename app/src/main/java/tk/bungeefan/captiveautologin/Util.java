@@ -71,7 +71,7 @@ public class Util {
             inputStream = conn.getInputStream();
         } catch (FileNotFoundException e) {
             inputStream = conn.getErrorStream();
-            Log.d(TAG, "Using ErrorStream due to the exception");
+            Log.d(TAG, "Using ErrorStream due to exception", e);
         }
         String response = "";
         if (inputStream != null) {
