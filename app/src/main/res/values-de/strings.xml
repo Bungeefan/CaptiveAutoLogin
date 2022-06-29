@@ -7,7 +7,6 @@
     <string name="data_export_action">Export</string>
     <string name="data_export_failed">Daten konnten nicht nach \"%s\" exportiert werden</string>
     <string name="data_export_success">Daten erfolgreich in \"%s\" exportiert</string>
-    <string name="data_export_title">Exportieren</string>
     <string name="data_import_action">Import</string>
     <string name="data_import_failed">Daten von \"%s\" konnten nicht importiert werden</string>
     <string name="data_import_success">Daten erfolgreich importiert!</string>
