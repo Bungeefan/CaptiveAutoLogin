@@ -58,6 +58,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.exceptions.UndeliverableException;
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import tk.bungeefan.captiveautologin.BuildConfig;
 import tk.bungeefan.captiveautologin.ILoginFailed;
 import tk.bungeefan.captiveautologin.R;
 import tk.bungeefan.captiveautologin.Updater;
@@ -359,36 +360,32 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(latestVersion -> {
                     if (latestVersion != -1) {
-                        try {
-                            long currentVersion = Util.getVersionCode(this);
+                        int currentVersion = BuildConfig.VERSION_CODE;
 
-                            if (latestVersion > currentVersion) {
-                                Log.d(TAG, "Update available, latest: " + latestVersion + ", current: " + currentVersion);
-                                Snackbar snackbar = Snackbar.make(findViewById(R.id.content),
-                                        getString(R.string.update_new_version_available, latestVersion), 10000);
-                                TextView snackBarActionTextView = snackbar.getView().findViewById(R.id.snackbar_action);
-                                snackBarActionTextView.setTextSize(16);
-                                snackbar.setAction(R.string.update_new_version_action, v -> {
-                                    Log.d(TAG, "Downloading update (" + latestVersion + ")");
-                                    Snackbar.make(findViewById(R.id.content), getString(R.string.update_downloading), Snackbar.LENGTH_LONG).show();
+                        if (latestVersion > currentVersion) {
+                            Log.d(TAG, "Update available, latest: " + latestVersion + ", current: " + currentVersion);
+                            Snackbar snackbar = Snackbar.make(findViewById(R.id.content),
+                                    getString(R.string.update_new_version_available, latestVersion), 10000);
+                            TextView snackBarActionTextView = snackbar.getView().findViewById(R.id.snackbar_action);
+                            snackBarActionTextView.setTextSize(16);
+                            snackbar.setAction(R.string.update_new_version_action, v -> {
+                                Log.d(TAG, "Downloading update (" + latestVersion + ")");
+                                Snackbar.make(findViewById(R.id.content), getString(R.string.update_downloading), Snackbar.LENGTH_LONG).show();
 
-                                    mDisposable.add(Observable.fromCallable(() -> Updater.getUpdateFileName(MainActivity.FILENAME_URL))
-                                            .subscribeOn(Schedulers.io())
-                                            .observeOn(AndroidSchedulers.mainThread())
-                                            .subscribe(fileName -> downloadUpdate(MainActivity.DOWNLOAD_URL + fileName + ".apk"),
-                                                    throwable -> {
-                                                        Log.e(TAG, "Error while downloading update file name");
-                                                        Snackbar.make(findViewById(R.id.content), getString(R.string.update_failed), Snackbar.LENGTH_SHORT).show();
-                                                    })
-                                    );
-                                }).show();
-                            } else if (!silent) {
-                                Snackbar.make(findViewById(R.id.content), getString(R.string.update_version_up_to_date), Snackbar.LENGTH_SHORT).show();
-                            }
-                            return;
-                        } catch (PackageManager.NameNotFoundException e) {
-                            Log.e(TAG, "Failed to retrieve version info", e);
+                                mDisposable.add(Observable.fromCallable(() -> Updater.getUpdateFileName(MainActivity.FILENAME_URL))
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribe(fileName -> downloadUpdate(MainActivity.DOWNLOAD_URL + fileName + ".apk"),
+                                                throwable -> {
+                                                    Log.e(TAG, "Error while downloading update file name");
+                                                    Snackbar.make(findViewById(R.id.content), getString(R.string.update_failed), Snackbar.LENGTH_SHORT).show();
+                                                })
+                                );
+                            }).show();
+                        } else if (!silent) {
+                            Snackbar.make(findViewById(R.id.content), getString(R.string.update_version_up_to_date), Snackbar.LENGTH_SHORT).show();
                         }
+                        return;
                     }
 
                     Snackbar.make(findViewById(R.id.content), getString(R.string.update_check_failed), Snackbar.LENGTH_SHORT).show();

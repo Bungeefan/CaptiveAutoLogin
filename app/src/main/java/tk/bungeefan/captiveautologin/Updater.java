@@ -27,7 +27,7 @@ public class Updater {
     public static long getLatestVersion(String url) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         String response = Util.readResponse(TAG, conn);
-        return Long.parseLong(response);
+        return Integer.parseInt(response);
     }
 
     @NonNull

@@ -1,7 +1,6 @@
 package tk.bungeefan.captiveautologin;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.net.CaptivePortal;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -12,7 +11,6 @@ import android.net.wifi.WifiManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-import androidx.core.content.pm.PackageInfoCompat;
 import androidx.work.Constraints;
 import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
@@ -174,10 +172,6 @@ public class Util {
         try (PrintWriter out = new PrintWriter(new OutputStreamWriter(outputStream))) {
             dataList.forEach(login -> out.println(login.toCSVString()));
         }
-    }
-
-    public static long getVersionCode(Context context) throws PackageManager.NameNotFoundException {
-        return PackageInfoCompat.getLongVersionCode(context.getPackageManager().getPackageInfo(context.getPackageName(), 0));
     }
 
     public static Network getNetworkForCaptivePortal(ConnectivityManager cm) {
