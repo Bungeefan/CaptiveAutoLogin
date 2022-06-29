@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory android:title="@string/settings_title_general">
 
@@ -31,9 +30,7 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory
-        app:key="notifications_category"
-        app:title="@string/settings_title_notifications">
+    <PreferenceCategory android:title="@string/settings_title_notifications">
 
         <Preference
             android:icon="@drawable/baseline_notifications_24dp"
@@ -42,9 +39,7 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory
-        app:key="notifications_category"
-        app:title="@string/settings_title_reset">
+    <PreferenceCategory android:title="@string/settings_title_reset">
 
         <Preference
             android:key="reset_dismissed_content"
