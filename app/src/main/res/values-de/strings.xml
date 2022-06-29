@@ -30,6 +30,7 @@
     <string name="login_anyway">Ich verstehe, trotzdem einloggen</string>
     <string name="login_failed">Login fehlgeschlagen</string>
     <string name="login_in_progress">(%s) Login in Arbeit!</string>
+    <string name="login_canceled">(%s) Login abgebrochen</string>
     <string name="login_manually">Manuell einloggen</string>
     <string name="login_notification_channel">Login</string>
     <string name="login_notification_channel_description">Benachrichtigt dich über den Login Prozess</string>

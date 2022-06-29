@@ -1,14 +1,9 @@
 package tk.bungeefan.captiveautologin;
 
 import android.net.CaptivePortal;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -94,28 +89,6 @@ public class LoginUtil {
             result.append(URLEncoder.encode(param.getValue(), StandardCharsets.UTF_8.name()));
         }
         return result.toString();
-    }
-
-    public static void bindNetwork(ConnectivityManager mConnectivityManager, @Nullable Network network) {
-        if (mConnectivityManager != null) {
-            if (network == null) {
-                NetworkRequest.Builder request = new NetworkRequest.Builder();
-//                request.addCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL);
-                request.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-                mConnectivityManager.requestNetwork(request.build(), new ConnectivityManager.NetworkCallback() {
-                    @Override
-                    public void onAvailable(@NonNull Network availableNetwork) {
-                        try {
-                            mConnectivityManager.bindProcessToNetwork(availableNetwork);
-                        } catch (IllegalStateException e) {
-                            Log.e(TAG, "ConnectivityManager.NetworkCallback.onAvailable: ", e);
-                        }
-                    }
-                });
-            } else {
-                mConnectivityManager.bindProcessToNetwork(network);
-            }
-        }
     }
 
     public static void reportCaptivePortal(CaptivePortal captivePortal) {
