@@ -85,6 +85,7 @@ public class Util {
             }
         }
         Log.d(TAG, "Response of " + conn.getURL() + ": \"" + response + "\"");
+        conn.disconnect();
         return response;
     }
 
