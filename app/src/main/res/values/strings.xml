@@ -44,7 +44,7 @@
     <string name="login_try">Trying to login!</string>
     <string name="login_in_progress">(%s) Login in progress!</string>
     <string name="logged_in_successfully">Logged in successfully</string>
-    <string name="already_logged_in">Already logged in</string>
+    <string name="already_connected">Already connected</string>
     <string name="failed_with_error">Failed with exception: "%s"</string>
     <string name="failed_with_http_code">Failed with HTTP Code: "%d"</string>
     <string name="login_successful">Login successful</string>
