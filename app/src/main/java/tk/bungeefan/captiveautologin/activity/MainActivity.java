@@ -235,49 +235,48 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 return;
             }
 
-            if (newLogin.getId() == null) {
-                mDisposable.add(mLoginViewModel.getDatabase().loginDao().findBySSID(newLogin.getSSID())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(logins -> {
-                            if (logins.isEmpty()) {
-                                mDisposable.add(
-                                        mLoginViewModel.getDatabase().loginDao().insertAll(newLogin)
-                                                .subscribeOn(Schedulers.io())
-                                                .observeOn(AndroidSchedulers.mainThread())
-                                                .subscribe(() -> {
-                                                        },
-                                                        throwable -> {
-                                                            Log.e(TAG, "Unable to save login data", throwable);
-                                                            Snackbar.make(findViewById(R.id.content), getString(R.string.error_persisting_changes), Snackbar.LENGTH_SHORT).show();
-                                                        })
+            mDisposable.add(mLoginViewModel.getDatabase().loginDao().findBySSID(newLogin.getSSID())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(logins -> {
+                        if (logins.isEmpty()) {
+                            if (newLogin.getId() == null) {
+                                mDisposable.add(mLoginViewModel.getDatabase().loginDao().insertAll(newLogin)
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribe(() -> {
+                                                },
+                                                throwable -> {
+                                                    Log.e(TAG, "Unable to save login data", throwable);
+                                                    Snackbar.make(findViewById(R.id.content), getString(R.string.error_persisting_changes), Snackbar.LENGTH_SHORT).show();
+                                                })
                                 );
                             } else {
-                                runOnUiThread(() ->
-                                        new MaterialAlertDialogBuilder(this)
-                                                .setTitle(getString(R.string.error_title))
-                                                .setMessage(getString(R.string.entry_already_exists, newLogin.getSSID()))
-                                                .setPositiveButton(android.R.string.ok, null)
-                                                .show()
+                                mDisposable.add(mLoginViewModel.getDatabase().loginDao().update(newLogin)
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribe(() -> {
+                                                },
+                                                throwable -> {
+                                                    Log.e(TAG, "Unable to update login data", throwable);
+                                                    Snackbar.make(findViewById(R.id.content), getString(R.string.error_persisting_changes), Snackbar.LENGTH_SHORT).show();
+                                                }
+                                        )
                                 );
                             }
-                        }, throwable -> {
-                            Log.e(TAG, "Unable to check login data", throwable);
-                            Snackbar.make(findViewById(R.id.content), getString(R.string.error_persisting_changes), Snackbar.LENGTH_SHORT).show();
-                        })
-                );
-            } else {
-                mDisposable.add(mLoginViewModel.getDatabase().loginDao().update(newLogin)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(() -> {
-                                },
-                                throwable -> {
-                                    Log.e(TAG, "Unable to update login data", throwable);
-                                    Snackbar.make(findViewById(R.id.content), getString(R.string.error_persisting_changes), Snackbar.LENGTH_SHORT).show();
-                                }
-                        )
-                );
-            }
+                        } else {
+                            runOnUiThread(() ->
+                                    new MaterialAlertDialogBuilder(this)
+                                            .setTitle(getString(R.string.error_title))
+                                            .setMessage(getString(R.string.entry_already_exists, newLogin.getSSID()))
+                                            .setPositiveButton(android.R.string.ok, null)
+                                            .show()
+                            );
+                        }
+                    }, throwable -> {
+                        Log.e(TAG, "Unable to check login data", throwable);
+                        Snackbar.make(findViewById(R.id.content), getString(R.string.error_persisting_changes), Snackbar.LENGTH_SHORT).show();
+                    })
+            );
         });
     }
 
