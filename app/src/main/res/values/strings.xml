@@ -12,7 +12,7 @@
     <string name="data_import_failed">Data couldn\'t be restored from \"%s\"</string>
     <string name="data_import_success">Data successfully imported!</string>
     <string name="details">Details</string>
-    <string name="dismissed_content_reset">Dismissed request were reset!</string>
+    <string name="dismissed_content_reset">Dismissed dialogs were reset!</string>
     <string name="edit">Edit</string>
     <string name="edit_login_title">Edit CaptivePortal-Login</string>
     <string name="empty_wifi_name">The Wi-Fi name must not be empty!</string>
