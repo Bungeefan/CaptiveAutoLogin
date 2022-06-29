@@ -15,7 +15,7 @@
     <string name="update_check_failed">Updateprüfung fehlgeschlagen!</string>
     <string name="password_saved">Passwort gespeichert</string>
     <string name="permission_denied">Berechtigung abgelehnt</string>
-    <string name="already_logged_in">Bereits eingeloggt</string>
+    <string name="already_connected">Bereits verbunden</string>
     <string name="another_network">Dein aktuelles genutztes Netzwerk (%s) ist nicht dasselbe als das du ausgewählt hast (%s)!</string>
     <string name="entry_already_exists">Ein CaptivePortal-Login mit der SSID (%s) existiert bereits! Stattdessen versuche es zu bearbeiten.</string>
     <string name="unknown_error">Unbekannter Fehler</string>

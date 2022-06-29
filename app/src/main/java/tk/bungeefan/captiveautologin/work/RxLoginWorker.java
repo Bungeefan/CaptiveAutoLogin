@@ -185,7 +185,7 @@ public class RxLoginWorker extends RxWorker {
                         } else {
                             responseCode = conn.getResponseCode();
                             Log.d(TAG, "HTTP Response Code: " + responseCode);
-                            response = getApplicationContext().getString(R.string.already_logged_in);
+                            response = getApplicationContext().getString(R.string.already_connected);
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error while logging in", e);
