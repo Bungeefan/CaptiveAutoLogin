@@ -2,9 +2,11 @@ package tk.bungeefan.captiveautologin;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.StrictMode;
 
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.color.DynamicColors;
@@ -15,11 +17,21 @@ import org.acra.config.MailSenderConfigurationBuilder;
 import org.acra.config.NotificationConfigurationBuilder;
 import org.acra.data.StringFormat;
 
-import tk.bungeefan.captiveautologin.activity.SettingsActivity;
-
 public class MainApplication extends Application {
 
+    public static final String THEME_KEY = "pref_theme";
     private static final String REPORT_MAIL = "severin.hamader@yahoo.de";
+
+    public static void setTheme(SharedPreferences prefs) {
+        int defaultValue = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+        int themeSetting;
+        try {
+            themeSetting = Integer.parseInt(prefs.getString(THEME_KEY, String.valueOf(defaultValue)));
+        } catch (NumberFormatException e) {
+            themeSetting = defaultValue;
+        }
+        AppCompatDelegate.setDefaultNightMode(themeSetting);
+    }
 
     @Override
     public void onCreate() {
@@ -33,7 +45,7 @@ public class MainApplication extends Application {
         }
 
         var prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        SettingsActivity.setTheme(prefs);
+        setTheme(prefs);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             DynamicColors.applyToActivitiesIfAvailable(this);

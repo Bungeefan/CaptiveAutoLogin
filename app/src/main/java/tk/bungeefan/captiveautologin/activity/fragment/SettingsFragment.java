@@ -12,15 +12,15 @@ import androidx.preference.PreferenceFragmentCompat;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
+import tk.bungeefan.captiveautologin.MainApplication;
 import tk.bungeefan.captiveautologin.R;
 import tk.bungeefan.captiveautologin.activity.MainActivity;
-import tk.bungeefan.captiveautologin.activity.SettingsActivity;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 
     private static final SharedPreferences.OnSharedPreferenceChangeListener CHANGE_LISTENER = (prefs, key) -> {
-        if (key.equals(SettingsActivity.THEME_KEY)) {
-            SettingsActivity.setTheme(prefs);
+        if (key.equals(MainApplication.THEME_KEY)) {
+            MainApplication.setTheme(prefs);
         }
     };
 
