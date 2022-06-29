@@ -431,7 +431,6 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     }
 
     private void createNotificationChannel() {
-        mNotificationManager.deleteNotificationChannel("default"); //TODO Remove next version
         NotificationChannel channel = new NotificationChannel(CHANNEL_ID, getString(R.string.notification_channel_login), NotificationManager.IMPORTANCE_DEFAULT);
         channel.setDescription(getString(R.string.notification_channel_description_login));
         channel.setShowBadge(true);
