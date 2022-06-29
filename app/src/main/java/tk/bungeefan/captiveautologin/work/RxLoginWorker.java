@@ -185,18 +185,18 @@ public class RxLoginWorker extends RxWorker {
                         } else {
                             responseCode = conn.getResponseCode();
                             Log.d(TAG, "HTTP Response Code: " + responseCode);
-                            response = getApplicationContext().getString(R.string.already_connected);
+                            response = getApplicationContext().getString(R.string.login_already_connected);
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error while logging in", e);
-                        response = getApplicationContext().getString(R.string.failed_with_error, e.getMessage());
+                        response = getApplicationContext().getString(R.string.login_failed_with_error, e.getMessage());
                         failed = true;
                     } finally {
                         if (conn != null) conn.disconnect();
                     }
 
                     if (response == null || response.isEmpty()) {
-                        response = getApplicationContext().getString(R.string.failed_with_http_code, responseCode);
+                        response = getApplicationContext().getString(R.string.login_failed_with_http_code, responseCode);
                         failed = true;
                     }
 

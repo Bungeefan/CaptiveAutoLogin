@@ -366,12 +366,12 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                             if (latestVersion > currentVersion) {
                                 Log.d(TAG, "Update available, latest: " + latestVersion + ", current: " + currentVersion);
                                 Snackbar snackbar = Snackbar.make(findViewById(R.id.content),
-                                        getString(R.string.new_version_available, latestVersion), 10000);
+                                        getString(R.string.update_new_version_available, latestVersion), 10000);
                                 TextView snackBarActionTextView = snackbar.getView().findViewById(R.id.snackbar_action);
                                 snackBarActionTextView.setTextSize(16);
-                                snackbar.setAction(R.string.new_version_action, v -> {
+                                snackbar.setAction(R.string.update_new_version_action, v -> {
                                     Log.d(TAG, "Downloading update (" + latestVersion + ")");
-                                    Snackbar.make(findViewById(R.id.content), getString(R.string.downloading_update), Snackbar.LENGTH_LONG).show();
+                                    Snackbar.make(findViewById(R.id.content), getString(R.string.update_downloading), Snackbar.LENGTH_LONG).show();
 
                                     mDisposable.add(Observable.fromCallable(() -> Updater.getUpdateFileName(MainActivity.FILENAME_URL))
                                             .subscribeOn(Schedulers.io())
@@ -384,7 +384,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                                     );
                                 }).show();
                             } else if (!silent) {
-                                Snackbar.make(findViewById(R.id.content), getString(R.string.version_up_to_date), Snackbar.LENGTH_SHORT).show();
+                                Snackbar.make(findViewById(R.id.content), getString(R.string.update_version_up_to_date), Snackbar.LENGTH_SHORT).show();
                             }
                             return;
                         } catch (PackageManager.NameNotFoundException e) {
@@ -411,7 +411,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 ctx.unregisterReceiver(this);
                 try (var fileDescriptor = mDownloadManager.openDownloadedFile(downloadId);
                      var in = new BufferedInputStream(new FileInputStream(fileDescriptor.getFileDescriptor()))) {
-                    Snackbar.make(findViewById(R.id.content), ctx.getString(R.string.installing_new_update), Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(R.id.content), ctx.getString(R.string.update_installing), Snackbar.LENGTH_SHORT).show();
 
                     Log.d(TAG, "Installing update");
                     Updater.installPackage(ctx, ctx.getPackageName(), in, fileDescriptor.getStatSize());
@@ -426,7 +426,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(uri))
                 .setTitle(getString(R.string.app_name))
-                .setDescription(getString(R.string.downloading_update))
+                .setDescription(getString(R.string.update_downloading))
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
         mDownloadManager.enqueue(request);
     }
@@ -669,7 +669,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     public void loginFailed(CaptivePortal captivePortal, Login loginData, String response, @Nullable String url) {
         var builder = new MaterialAlertDialogBuilder(this)
                 .setTitle(loginData.getSSID() + " - " + getString(R.string.error_title))
-                .setMessage((response != null ? response + "\n" : "") + getString(R.string.try_manual_login))
+                .setMessage((response != null ? response + "\n" : "") + getString(R.string.login_try_manual))
                 .setNeutralButton(android.R.string.cancel, null);
 
         if (url != null || captivePortalUrl != null) {
