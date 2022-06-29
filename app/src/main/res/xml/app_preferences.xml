@@ -2,7 +2,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory android:title="@string/general_settings">
+    <PreferenceCategory android:title="@string/settings_title_general">
 
         <SwitchPreference
             android:defaultValue="true"
@@ -33,18 +33,18 @@
 
     <PreferenceCategory
         app:key="notifications_category"
-        app:title="@string/notifications_settings">
+        app:title="@string/settings_title_notifications">
 
         <Preference
             android:icon="@drawable/baseline_notifications_24dp"
             android:key="notifications"
-            android:title="@string/notifications_settings" />
+            android:title="@string/settings_title_notifications" />
 
     </PreferenceCategory>
 
     <PreferenceCategory
         app:key="notifications_category"
-        app:title="@string/reset_settings">
+        app:title="@string/settings_title_reset">
 
         <Preference
             android:key="reset_dismissed_content"
