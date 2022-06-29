@@ -33,6 +33,7 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.ViewModelProvider;
@@ -66,7 +67,6 @@ import tk.bungeefan.captiveautologin.activity.fragment.WifiDetailsFragment;
 import tk.bungeefan.captiveautologin.data.LoginAdapter;
 import tk.bungeefan.captiveautologin.data.LoginViewModel;
 import tk.bungeefan.captiveautologin.data.entity.Login;
-import tk.bungeefan.captiveautologin.task.LoginTask;
 
 public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
@@ -126,26 +126,6 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
             this.captivePortal = savedInstanceState.getParcelable(ConnectivityManager.EXTRA_CAPTIVE_PORTAL);
             this.captivePortal = savedInstanceState.getParcelable(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL);
             this.network = savedInstanceState.getParcelable(ConnectivityManager.EXTRA_NETWORK);
-        }
-
-        if (intent.getBooleanExtra(LoginTask.FAILED_EXTRA, false)) {
-            int loginId = intent.getIntExtra(LoginTask.WIFI_DATA_EXTRA, -1);
-            if (loginId != -1) {
-                mDisposable.add(
-                        mLoginViewModel.getDatabase().loginDao().findById(loginId)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(login -> {
-                                    if (login != null) {
-                                        loginFailed(
-                                                intent.getParcelableExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL),
-                                                login,
-                                                intent.getStringExtra(LoginTask.RESPONSE_EXTRA),
-                                                intent.getStringExtra(WebViewActivity.URL_EXTRA)
-                                        );
-                                    }
-                                })
-                );
-            }
         }
 
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -453,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
     private void createNotificationChannel() {
         mNotificationManager.deleteNotificationChannel("default"); //TODO Remove next version
-        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, getString(R.string.login_notification_channel), NotificationManager.IMPORTANCE_HIGH);
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, getString(R.string.login_notification_channel), NotificationManager.IMPORTANCE_DEFAULT);
         channel.setDescription(getString(R.string.login_notification_channel_description));
         channel.setShowBadge(true);
         mNotificationManager.createNotificationChannel(channel);
@@ -686,36 +666,40 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     }
 
     @Override
-    public void loginFailed(CaptivePortal captivePortal, Login loginData, String response, String url) {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(loginData.getSSID() + " - " + getString(R.string.error_title)).setMessage(response + "\n" + getString(R.string.try_manual_login))
-                .setPositiveButton(getString(R.string.login_manually), (dialog, which) -> {
+    public void loginFailed(CaptivePortal captivePortal, Login loginData, String response, @Nullable String url) {
+        var builder = new MaterialAlertDialogBuilder(this)
+                .setTitle(loginData.getSSID() + " - " + getString(R.string.error_title))
+                .setMessage((response != null ? response + "\n" : "") + getString(R.string.try_manual_login))
+                .setNeutralButton(android.R.string.cancel, null);
+
+        if (url != null || captivePortalUrl != null) {
+            builder.setPositiveButton(getString(R.string.login_manually), (dialog, which) -> {
+                try {
                     try {
-                        try {
-                            Intent intent = new Intent(ConnectivityManager.ACTION_CAPTIVE_PORTAL_SIGN_IN)
-                                    .setPackage("com.android.captiveportallogin")
-                                    .putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL, captivePortal)
-                                    .putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL, captivePortalUrl)
-                                    .putExtra(ConnectivityManager.EXTRA_NETWORK, network);
-                            startActivity(intent);
-                        } catch (ActivityNotFoundException e) {
-                            Log.w(TAG, "Unable to launch system app for captive portals", e);
-                            Intent browserIntent = new Intent(this, WebViewActivity.class);
-                            browserIntent.putExtra(WebViewActivity.URL_EXTRA, url);
-                            browserIntent.putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL, captivePortal);
-                            browserIntent.putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL, captivePortalUrl);
-                            startActivity(browserIntent);
-                        }
+                        Intent intent = new Intent(ConnectivityManager.ACTION_CAPTIVE_PORTAL_SIGN_IN)
+                                .setPackage("com.android.captiveportallogin")
+                                .putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL, captivePortal)
+                                .putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL, captivePortalUrl)
+                                .putExtra(ConnectivityManager.EXTRA_NETWORK, network);
+                        startActivity(intent);
                     } catch (ActivityNotFoundException e) {
-                        Log.e(TAG, "Unable to launch web-view activity", e);
-                        new MaterialAlertDialogBuilder(this)
-                                .setTitle(getString(R.string.error_title))
-                                .setMessage(getString(R.string.no_url_activity, url))
-                                .setPositiveButton(android.R.string.ok, null)
-                                .show();
+                        Log.w(TAG, "Unable to launch system app for captive portals", e);
+                        Intent browserIntent = new Intent(this, WebViewActivity.class);
+                        browserIntent.putExtra(WebViewActivity.URL_EXTRA, url != null ? url : captivePortalUrl);
+                        browserIntent.putExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL, captivePortal);
+                        startActivity(browserIntent);
                     }
-                })
-                .setNeutralButton(android.R.string.cancel, null)
-                .show();
+                } catch (ActivityNotFoundException e) {
+                    Log.e(TAG, "Unable to launch web-view activity", e);
+                    new MaterialAlertDialogBuilder(this)
+                            .setTitle(getString(R.string.error_title))
+                            .setMessage(getString(R.string.no_url_activity, url))
+                            .setPositiveButton(android.R.string.ok, null)
+                            .show();
+                }
+            });
+        }
+
+        builder.show();
     }
 }

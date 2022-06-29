@@ -50,6 +50,7 @@
     <string name="login_successful">Login successful</string>
     <string name="login_failed">Login failed</string>
     <string name="login_already_in_progress">Login already in progress!</string>
+    <string name="login_canceled">(%s) Login canceled</string>
     <string name="data_import_success">Data successfully imported!</string>
     <string name="data_import_failed">Data couldn\'t be restored from \"%s\"</string>
     <string name="data_export_success">Data successfully exported to \"%s\"</string>
