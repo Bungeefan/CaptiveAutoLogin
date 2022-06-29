@@ -478,11 +478,14 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                 new MaterialAlertDialogBuilder(this)
                         .setTitle(getString(R.string.rational_location_permission_title))
                         .setMessage(getString(R.string.rational_location_permission_description))
-                        .setPositiveButton(getString(R.string.grant_permission), (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode))
+                        .setPositiveButton(getString(R.string.grant_permission), (dialog, which) -> {
+                            if (!hasShownPermissionExplanation) {
+                                prefs.edit().putBoolean(PREF_PERMISSION_KEY, true).apply();
+                            }
+                            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode);
+                        })
+                        .setCancelable(false)
                         .show();
-                if (!hasShownPermissionExplanation) {
-                    prefs.edit().putBoolean(PREF_PERMISSION_KEY, true).apply();
-                }
             } else {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode);
             }
