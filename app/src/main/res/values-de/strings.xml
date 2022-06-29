@@ -32,8 +32,6 @@
     <string name="login_failed_with_http_code">Fehlgeschlagen mit dem HTTP Code: "%d"</string>
     <string name="login_in_progress">(%s) Login in Arbeit!</string>
     <string name="login_manually">Manuell einloggen</string>
-    <string name="login_notification_channel">Login</string>
-    <string name="login_notification_channel_description">Benachrichtigt dich über den Login Prozess</string>
     <string name="login_successful">Login erfolgreich</string>
     <string name="login_try">Versuche einzuloggen!</string>
     <string name="login_try_manual">Versuche stattdessen manuell einzuloggen!</string>
@@ -43,6 +41,8 @@
     <string name="no_saved_password">Kein gespeichertes Passwort</string>
     <string name="no_url_activity">Konnte die URL %s auf deinem Handy nicht öffnen!</string>
     <string name="not_connected_to_network">Du bist zurzeit mit keinem Netzwerk verbunden!</string>
+    <string name="notification_channel_description_login">Benachrichtigt dich über den Login Prozess</string>
+    <string name="notification_channel_login">Login</string>
     <string name="open_permission_settings">Öffne Einstellungen</string>
     <string name="other_network_detected">Anderes Netzwerk erkannt!</string>
     <string name="password">Passwort</string>
