@@ -3,7 +3,9 @@ package tk.bungeefan.captiveautologin;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.CaptivePortal;
+import android.net.ConnectivityManager;
 import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -125,5 +127,17 @@ public class Util {
 
     public static long getVersionCode(Context context) throws PackageManager.NameNotFoundException {
         return PackageInfoCompat.getLongVersionCode(context.getPackageManager().getPackageInfo(context.getPackageName(), 0));
+    }
+
+    public static Network getNetworkForCaptivePortal(ConnectivityManager cm) {
+        Network[] info = cm.getAllNetworks();
+        for (Network nw : info) {
+            final NetworkCapabilities nc = cm.getNetworkCapabilities(nw);
+            if (nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                    && nc.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                return nw;
+            }
+        }
+        return null;
     }
 }
