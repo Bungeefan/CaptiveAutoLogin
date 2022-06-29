@@ -35,17 +35,19 @@ dependencies {
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
 
     def work_version = "2.7.1"
-
     implementation "androidx.work:work-runtime:$work_version"
     implementation "androidx.work:work-rxjava3:$work_version"
 
     implementation "com.google.guava:guava:31.0.1-android"
 
     def room_version = "2.4.2"
-
     implementation "androidx.room:room-runtime:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
     implementation "androidx.room:room-rxjava3:$room_version"
+
+    def acraVersion = '5.9.3'
+    implementation "ch.acra:acra-notification:$acraVersion"
+    implementation "ch.acra:acra-mail:$acraVersion"
 
     implementation 'org.jsoup:jsoup:1.13.1'
     testImplementation 'junit:junit:4.13.2'
