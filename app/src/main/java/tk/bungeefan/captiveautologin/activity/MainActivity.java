@@ -315,9 +315,10 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         super.onResume();
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (callback != null) {
-                NetworkRequest.Builder builder = new NetworkRequest.Builder();
-                builder.addCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL);
-                mConnectivityManager.registerNetworkCallback(builder.build(), callback);
+                NetworkRequest request = new NetworkRequest.Builder()
+                        .addCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL)
+                        .build();
+                mConnectivityManager.registerNetworkCallback(request, callback);
                 Log.d(TAG, "Registered network callback");
             }
         }
