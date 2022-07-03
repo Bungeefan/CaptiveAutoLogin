@@ -158,10 +158,17 @@ public class WebViewActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        webView.destroy();
+        if (webView != null) webView.destroy();
+
         if (mNetworkCallback != null) {
-            mCm.unregisterNetworkCallback(mNetworkCallback);
+            try {
+                mCm.unregisterNetworkCallback(mNetworkCallback);
+                Log.d(TAG, "Unregistered network request");
+            } catch (IllegalArgumentException e) {
+                Log.e(TAG, "Error while unregistering network request", e);
+            }
         }
+
         super.onDestroy();
     }
 }
