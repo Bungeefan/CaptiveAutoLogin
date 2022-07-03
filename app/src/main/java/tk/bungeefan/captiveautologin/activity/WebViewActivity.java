@@ -46,6 +46,8 @@ public class WebViewActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_web_view);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         mCm = getSystemService(ConnectivityManager.class);
 
         webView = findViewById(R.id.webView);
