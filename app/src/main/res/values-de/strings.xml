@@ -41,11 +41,11 @@
     <string name="no_saved_password">Kein gespeichertes Passwort</string>
     <string name="no_url_activity">Konnte die URL %s auf deinem Handy nicht öffnen!</string>
     <string name="not_connected_to_network">Du bist zurzeit mit keinem Netzwerk verbunden!</string>
-    <string name="notification_channel_crash">Abstürze</string>
     <string name="notification_channel_description_login">Benachrichtigt dich über den Login Prozess</string>
+    <string name="notification_channel_error_report">Fehler</string>
     <string name="notification_channel_login">Login</string>
-    <string name="notification_text_crash">Entschuldige, die App ist leider abgestürzt. Bitte sende uns einen Absturzbericht, damit wir dies in Zukunft verhindern können.</string>
-    <string name="notification_title_crash">Absturz</string>
+    <string name="notification_text_error_report">Entschuldige, die App hatte leider ein Problem. Bitte sende uns den Bericht, damit wir dies in Zukunft verhindern können.</string>
+    <string name="notification_title_error_report">Fehler</string>
     <string name="open_permission_settings">Öffne Einstellungen</string>
     <string name="other_network_detected">Anderes Netzwerk erkannt!</string>
     <string name="password">Passwort</string>

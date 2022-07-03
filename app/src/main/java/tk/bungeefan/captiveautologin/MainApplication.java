@@ -64,13 +64,14 @@ public class MainApplication extends Application {
                 .withPluginConfigurations(
                         new MailSenderConfigurationBuilder()
                                 .withMailTo(REPORT_MAIL)
+                                .withSubject(getString(R.string.app_name) + " Error Report")
                                 .withReportAsFile(true)
                                 .build(),
                         new NotificationConfigurationBuilder()
-                                .withTitle(getString(R.string.notification_title_crash))
-                                .withText(getString(R.string.notification_text_crash))
-                                .withChannelName(getString(R.string.notification_channel_crash))
-                                .withTickerText(getString(R.string.notification_text_crash))
+                                .withTitle(getString(R.string.notification_title_error_report))
+                                .withText(getString(R.string.notification_text_error_report))
+                                .withChannelName(getString(R.string.notification_channel_error_report))
+                                .withTickerText(getString(R.string.notification_text_error_report))
                                 .withResIcon(R.drawable.ic_stat_name)
                                 .withSendButtonText(getString(android.R.string.ok))
                                 .withDiscardButtonText(getString(android.R.string.cancel))

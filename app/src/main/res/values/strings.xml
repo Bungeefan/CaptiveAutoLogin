@@ -41,11 +41,11 @@
     <string name="no_saved_password">No saved password</string>
     <string name="no_url_activity">Couldn\'t open the url \"%s\" on your phone!</string>
     <string name="not_connected_to_network">You are currently not connected to a network!</string>
-    <string name="notification_channel_crash">Crashes</string>
     <string name="notification_channel_description_login">Notifies you about the login process</string>
+    <string name="notification_channel_error_report">Errors</string>
     <string name="notification_channel_login">Login</string>
-    <string name="notification_text_crash">Sorry, the application crashed. Please send us a crash report to help us prevent this in the future.</string>
-    <string name="notification_title_crash">Crash</string>
+    <string name="notification_text_error_report">Sorry, the application has produced an error. Please send us the report to help us prevent this in the future.</string>
+    <string name="notification_title_error_report">Error</string>
     <string name="open_permission_settings">Open Settings</string>
     <string name="other_network_detected">Other network detected!</string>
     <string name="password">Password</string>
