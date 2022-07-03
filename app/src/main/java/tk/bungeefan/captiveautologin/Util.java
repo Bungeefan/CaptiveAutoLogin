@@ -11,10 +11,8 @@ import android.net.wifi.WifiManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-import androidx.work.Constraints;
 import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
-import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.OutOfQuotaPolicy;
 import androidx.work.WorkInfo;
@@ -70,9 +68,6 @@ public class Util {
                         .putString(RxLoginWorker.LOGIN_DATA_SSID, login.getSSID())
                         .build())
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-                .setConstraints(new Constraints.Builder()
-                        .setRequiredNetworkType(NetworkType.CONNECTED)
-                        .build())
                 .build();
         WorkManager.getInstance(ctx).enqueueUniqueWork("loginCaptivePortal", ExistingWorkPolicy.KEEP, request);
 
