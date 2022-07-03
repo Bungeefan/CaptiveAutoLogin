@@ -20,6 +20,7 @@ import androidx.work.rxjava3.RxWorker;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.acra.ACRA;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedOutputStream;
@@ -27,6 +28,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 
 import io.reactivex.rxjava3.core.Single;
@@ -189,6 +191,11 @@ public class RxLoginWorker extends RxWorker {
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error while logging in", e);
+
+                        if (!(e instanceof UnknownHostException)) {
+                            ACRA.getErrorReporter().handleException(e);
+                        }
+
                         response = getApplicationContext().getString(R.string.login_failed_with_error, e.getMessage());
                         failed = true;
                     } finally {
