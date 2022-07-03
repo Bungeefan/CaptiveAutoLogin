@@ -37,7 +37,6 @@ public class WebViewActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mCm = getSystemService(ConnectivityManager.class);
 
         mUrl = getUrl();
         if (mUrl == null) {
@@ -45,9 +44,9 @@ public class WebViewActivity extends AppCompatActivity {
             return;
         }
 
-        CaptivePortal captivePortal = getIntent().getParcelableExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL);
-
         setContentView(R.layout.activity_web_view);
+
+        mCm = getSystemService(ConnectivityManager.class);
 
         webView = findViewById(R.id.webView);
         webView.clearCache(true);
@@ -64,6 +63,8 @@ public class WebViewActivity extends AppCompatActivity {
 
         SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefresh);
         swipeRefresh.setOnRefreshListener(() -> webView.reload());
+
+        CaptivePortal captivePortal = getIntent().getParcelableExtra(ConnectivityManager.EXTRA_CAPTIVE_PORTAL);
 
         webView.setWebViewClient(new WebViewClient() {
 
