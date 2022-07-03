@@ -12,6 +12,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -117,7 +118,7 @@ public class WebViewActivity extends AppCompatActivity {
 
         mNetworkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
-            public void onAvailable(Network network) {
+            public void onAvailable(@NonNull Network network) {
                 Log.d(TAG, "Network available: " + network);
                 setNetwork(network);
                 runOnUiThread(() -> {
@@ -140,7 +141,7 @@ public class WebViewActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onLost(Network lostNetwork) {
+            public void onLost(@NonNull Network lostNetwork) {
                 Log.d(TAG, "Network lost");
                 mReload = true;
             }
