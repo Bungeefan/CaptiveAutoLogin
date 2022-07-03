@@ -95,7 +95,7 @@ public class WebViewActivity extends AppCompatActivity {
         try {
             return new URL(url);
         } catch (MalformedURLException e) {
-            Log.d(TAG, "Invalid captive portal URL " + url);
+            Log.d(TAG, "Invalid captive portal URL " + url, e);
         }
         return null;
     }
