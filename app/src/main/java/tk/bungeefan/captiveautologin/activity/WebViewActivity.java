@@ -110,7 +110,6 @@ public class WebViewActivity extends AppCompatActivity {
         NetworkRequest request = new NetworkRequest.Builder()
                 .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)
                 .build();
 
         mNetworkCallback = new ConnectivityManager.NetworkCallback() {
