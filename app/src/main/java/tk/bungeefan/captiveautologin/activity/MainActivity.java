@@ -665,12 +665,14 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
 
     @Override
     public void loginFailed(CaptivePortal captivePortal, Login loginData, String response, @Nullable String url) {
+        boolean allowManualLogin = url != null || captivePortalUrl != null;
+
         var builder = new MaterialAlertDialogBuilder(this)
                 .setTitle(loginData.getSSID() + " - " + getString(R.string.error_title))
-                .setMessage((response != null ? response + "\n" : "") + getString(R.string.login_try_manual))
+                .setMessage((response != null ? response + "\n" : "") + (allowManualLogin ? getString(R.string.login_try_manual) : ""))
                 .setNeutralButton(android.R.string.cancel, null);
 
-        if (url != null || captivePortalUrl != null) {
+        if (allowManualLogin) {
             builder.setPositiveButton(getString(R.string.login_manually), (dialog, which) -> {
                 try {
                     try {
