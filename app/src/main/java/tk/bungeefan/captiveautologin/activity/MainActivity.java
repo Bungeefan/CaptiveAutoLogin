@@ -192,13 +192,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
             callback = new ConnectivityManager.NetworkCallback() {
                 @Override
                 public void onAvailable(@NonNull Network network) {
-                    WifiInfo wifiInfo;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        wifiInfo = (WifiInfo) mConnectivityManager.getNetworkCapabilities(network).getTransportInfo();
-                    } else {
-                        wifiInfo = mWifiManager.getConnectionInfo();
-                    }
-                    checkForWifi(wifiInfo, true);
+                    checkForWifi(getWifiInfo(network), true);
                 }
 
                 @Override
@@ -279,6 +273,10 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
                     })
             );
         });
+
+        if (network != null) {
+            checkForWifi(getWifiInfo(network), true);
+        }
     }
 
     private void initErrorHandler() {
@@ -353,6 +351,17 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         savedInstanceState.putParcelable(ConnectivityManager.EXTRA_CAPTIVE_PORTAL, captivePortal);
         savedInstanceState.putString(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL, captivePortalUrl);
         savedInstanceState.putParcelable(ConnectivityManager.EXTRA_NETWORK, network);
+    }
+
+    @Nullable
+    private WifiInfo getWifiInfo(@NonNull Network network) {
+        WifiInfo wifiInfo;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            wifiInfo = (WifiInfo) mConnectivityManager.getNetworkCapabilities(network).getTransportInfo();
+        } else {
+            wifiInfo = mWifiManager.getConnectionInfo();
+        }
+        return wifiInfo;
     }
 
     private void checkUpdate(boolean silent) {
