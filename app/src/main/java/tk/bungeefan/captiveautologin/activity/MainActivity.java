@@ -125,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         this.network = intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK);
         if (captivePortal == null && savedInstanceState != null) {
             this.captivePortal = savedInstanceState.getParcelable(ConnectivityManager.EXTRA_CAPTIVE_PORTAL);
-            this.captivePortal = savedInstanceState.getParcelable(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL);
+            this.captivePortalUrl = savedInstanceState.getString(ConnectivityManager.EXTRA_CAPTIVE_PORTAL_URL);
             this.network = savedInstanceState.getParcelable(ConnectivityManager.EXTRA_NETWORK);
         }
 
