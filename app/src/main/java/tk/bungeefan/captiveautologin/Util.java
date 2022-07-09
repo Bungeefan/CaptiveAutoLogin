@@ -6,7 +6,6 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 
@@ -47,11 +46,11 @@ public class Util {
         return ssid.replace("\"", "");
     }
 
-    public static void checkForWifi(MainActivity ctx, List<Login> list, @Nullable WifiInfo wifiInfo, CaptivePortal captivePortal, Network network, boolean silent) {
-        if (wifiInfo != null) {
-            String ssid = replaceSSID(wifiInfo.getSSID());
-            if (!isUnknownSSID(ssid)) {
-                list.stream().filter(login -> login.getSSID().equals(ssid))
+    public static void checkForWifi(MainActivity ctx, List<Login> list, @Nullable String ssid, @Nullable CaptivePortal captivePortal, @Nullable Network network, boolean silent) {
+        if (ssid != null) {
+            String finalSsid = replaceSSID(ssid);
+            if (!isUnknownSSID(finalSsid)) {
+                list.stream().filter(login -> login.getSSID().equals(finalSsid))
                         .forEach(login -> loginWifi(ctx, login, captivePortal, network, silent));
             }
         }
@@ -61,7 +60,7 @@ public class Util {
         return ssid.equals(WifiManager.UNKNOWN_SSID);
     }
 
-    public static void loginWifi(MainActivity ctx, Login login, CaptivePortal captivePortal, Network network, boolean silent) {
+    public static void loginWifi(MainActivity ctx, Login login, @Nullable CaptivePortal captivePortal, @Nullable Network network, boolean silent) {
         var request = new OneTimeWorkRequest.Builder(RxLoginWorker.class)
                 .setInputData(new Data.Builder()
                         .putLong(RxLoginWorker.LOGIN_DATA_ID, login.getId())

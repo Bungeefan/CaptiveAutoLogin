@@ -4,6 +4,7 @@ import android.net.CaptivePortal;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -91,7 +92,7 @@ public class LoginUtil {
         return result.toString();
     }
 
-    public static void reportCaptivePortal(CaptivePortal captivePortal) {
+    public static void reportCaptivePortal(@Nullable CaptivePortal captivePortal) {
         if (captivePortal != null) {
             captivePortal.reportCaptivePortalDismissed();
         }

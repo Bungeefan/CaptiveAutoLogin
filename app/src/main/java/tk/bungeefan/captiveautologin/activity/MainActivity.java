@@ -136,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         swipeRefresh.setOnRefreshListener(() -> {
             if (!mListViewAdapter.getCurrentList().isEmpty()) {
                 if (checkAndRequestLocationPermission(RQ_ACCESS_FINE_LOCATION)) {
-                    checkForWifi(mWifiManager.getConnectionInfo());
+                    checkForWifi(mWifiManager.getConnectionInfo(), false);
                 }
             }
             swipeRefresh.setRefreshing(false);
@@ -450,7 +450,7 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         if (grantResults.length > 0) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (requestCode == RQ_ACCESS_FINE_LOCATION) {
-                    checkForWifi(mWifiManager.getConnectionInfo());
+                    checkForWifi(mWifiManager.getConnectionInfo(), false);
                 } else if (requestCode == RQ_ACCESS_FINE_LOCATION_DIALOG) {
                     showInputDialog(null);
                 }
@@ -473,12 +473,14 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         }
     }
 
-    public void checkForWifi(WifiInfo wifiInfo) {
-        checkForWifi(wifiInfo, false);
+    public void checkForWifi(WifiInfo wifiInfo, boolean silent) {
+        if (wifiInfo != null) {
+            checkForWifi(wifiInfo.getSSID(), silent);
+        }
     }
 
-    public void checkForWifi(WifiInfo wifiInfo, boolean silent) {
-        Util.checkForWifi(this, mListViewAdapter.getCurrentList(), wifiInfo, captivePortal, network, silent);
+    public void checkForWifi(String ssid, boolean silent) {
+        Util.checkForWifi(this, mListViewAdapter.getCurrentList(), ssid, captivePortal, network, silent);
     }
 
     private boolean checkAndRequestLocationPermission(int requestCode) {
