@@ -33,6 +33,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.documentfile.provider.DocumentFile;
@@ -189,23 +190,11 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         }
 
         if (prefs.getBoolean("pref_auto_login_on_connect", true)) {
-            callback = new ConnectivityManager.NetworkCallback() {
-                @Override
-                public void onAvailable(@NonNull Network network) {
-                    checkForWifi(getWifiInfo(network), true);
-                }
-
-                @Override
-                public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
-                    WifiInfo wifiInfo;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        wifiInfo = (WifiInfo) networkCapabilities.getTransportInfo();
-                    } else {
-                        wifiInfo = mWifiManager.getConnectionInfo();
-                    }
-                    checkForWifi(wifiInfo, true);
-                }
-            };
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                callback = new AutoNetworkCallback(ConnectivityManager.NetworkCallback.FLAG_INCLUDE_LOCATION_INFO);
+            } else {
+                callback = new AutoNetworkCallback();
+            }
         }
 
         exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument() {
@@ -275,7 +264,15 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         });
 
         if (network != null) {
-            checkForWifi(getWifiInfo(network), true);
+            var wifiInfo = getWifiInfo(network);
+            if (wifiInfo != null) {
+                mDisposable.add(mLoginViewModel.getDatabase().loginDao().loadAll()
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(logins -> runOnUiThread(() ->
+                                Util.checkForWifi(this, logins, wifiInfo.getSSID(), captivePortal, network, true)
+                        ))
+                );
+            }
         }
     }
 
@@ -354,10 +351,18 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
     }
 
     @Nullable
-    private WifiInfo getWifiInfo(@NonNull Network network) {
-        WifiInfo wifiInfo;
+    private WifiInfo getWifiInfo() {
+        return getWifiInfo(null);
+    }
+
+    @Nullable
+    private WifiInfo getWifiInfo(@Nullable Network network) {
+        WifiInfo wifiInfo = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            wifiInfo = (WifiInfo) mConnectivityManager.getNetworkCapabilities(network).getTransportInfo();
+            NetworkCapabilities capabilities = mConnectivityManager.getNetworkCapabilities(network != null ? network : mConnectivityManager.getActiveNetwork());
+            if (capabilities != null) {
+                wifiInfo = (WifiInfo) capabilities.getTransportInfo();
+            }
         } else {
             wifiInfo = mWifiManager.getConnectionInfo();
         }
@@ -713,5 +718,32 @@ public class MainActivity extends AppCompatActivity implements ILoginFailed {
         }
 
         builder.show();
+    }
+
+    private class AutoNetworkCallback extends ConnectivityManager.NetworkCallback {
+
+        public AutoNetworkCallback() {
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.S)
+        public AutoNetworkCallback(int flags) {
+            super(flags);
+        }
+
+        @Override
+        public void onAvailable(@NonNull Network network) {
+            checkForWifi(getWifiInfo(network), true);
+        }
+
+        @Override
+        public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
+            WifiInfo wifiInfo;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                wifiInfo = (WifiInfo) networkCapabilities.getTransportInfo();
+            } else {
+                wifiInfo = mWifiManager.getConnectionInfo();
+            }
+            checkForWifi(wifiInfo, true);
+        }
     }
 }
