@@ -172,6 +172,7 @@ public class WebViewActivity extends AppCompatActivity {
             }
         }
 
+        mCm.bindProcessToNetwork(null);
         super.onDestroy();
     }
 }
