@@ -6,7 +6,6 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.os.Build;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -221,10 +220,7 @@ public class RxLoginWorker extends RxWorker {
                         loginData.setLastLogin(System.currentTimeMillis());
                         database.loginDao().update(loginData).subscribe(() -> {
                                 },
-                                throwable -> {
-                                    Log.e(TAG, "Unable to update last-login data", throwable);
-                                    Toast.makeText(getApplicationContext(), getApplicationContext().getString(R.string.error_persisting_changes), Toast.LENGTH_SHORT).show();
-                                }
+                                throwable -> Log.e(TAG, "Unable to update last-login data", throwable)
                         );
 
                         return Result.success(data.build());
